@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "290270590872",
+    "project_id": "stockdiary-2a561",
+    "storage_bucket": "stockdiary-2a561.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:290270590872:android:e4e179efe7b4e0abdddded",
+        "android_client_info": {
+          "package_name": "www.stockstorage.stockdiary"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "290270590872-b7eok9c6kg6l32kdplu7gnfa6u8hb5k3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3eINwWn1hUKcDpy1V1QpTSXzI2b7NPQg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "290270590872-b7eok9c6kg6l32kdplu7gnfa6u8hb5k3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
