@@ -671,38 +671,30 @@ class _RecommendState extends State<Recommend> {
                                                         const EdgeInsets.fromLTRB(
                                                             0, 0, 0, 8),
                                                     child: Row(
-                                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                                       children: [
-
-
-                                                        Row(
-                                                          children: [
-                                                            Text('종목: '),
-                                                            Text(
-                                                              i['종목'],
-                                                              style: TextStyle(
-                                                                  fontFamily:
-                                                                  'Strong',
-                                                                  color: Colors.red,
-                                                                  fontSize: 20),
-                                                            )
-                                                          ],
-                                                        ),
-                                                        Row(
-                                                          children: [
-                                                            Text('추천인: '),
-                                                            Text(i['추천인'],
-                                                                style: TextStyle(
-                                                                    fontFamily:
-                                                                    'Strong',
-                                                                    color: Colors
-                                                                        .blueAccent,
-                                                                    fontSize: 20)),
-                                                          ],
-                                                        ),
-
+                                                        Text('종목: '),
+                                                        Text(
+                                                          i['종목'],
+                                                          style: TextStyle(
+                                                              fontFamily:
+                                                              'Strong',
+                                                              color: Colors.red,
+                                                              fontSize: 20),
+                                                        )
                                                       ],
                                                     ),
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      Text('추천인: '),
+                                                      Text(i['추천인'],
+                                                          style: TextStyle(
+                                                              fontFamily:
+                                                              'Strong',
+                                                              color: Colors
+                                                                  .blueAccent,
+                                                              fontSize: 20)),
+                                                    ],
                                                   ),
                                                   Row(
                                                     mainAxisAlignment:
@@ -746,8 +738,8 @@ class _RecommendState extends State<Recommend> {
                                                         padding:
                                                             EdgeInsets.all(10),
                                                         child: Text(
-                                                          i['기타'],
-                                                          maxLines: 20,
+                                                          i['기타'].replaceAll("\\n", "\n"),
+                                                          maxLines: 40,
                                                           overflow: TextOverflow
                                                               .ellipsis,
                                                         ),

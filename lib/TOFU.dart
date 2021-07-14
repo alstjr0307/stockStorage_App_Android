@@ -250,7 +250,7 @@ class _TofuState extends State<Tofu> {
             );
           }
           final data = snapshot.requireData.data();
-          var keyss = data!.keys
+          var keysss = data!.keys
               .where((k) =>
           k.substring(6, 7) == monthController.text.substring(6, 7) &&
               k.substring(0, 4) ==
@@ -258,7 +258,8 @@ class _TofuState extends State<Tofu> {
               k.substring(5, 7) == monthController.text.substring(6, 8) &&
                   k.substring(0, 4) == monthController.text.substring(0, 4))
               .toList();
-          keyss.sort();
+          keysss.sort();
+          var keyss = List.from(keysss.reversed);
           return Flexible(
             child: ListView(
               children: [
@@ -334,39 +335,32 @@ class _TofuState extends State<Tofu> {
                                                   ),
                                                 ),
                                                 Row(
-                                                  mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceEvenly,
                                                   children: [
-                                                    Row(
-                                                      children: [
-                                                        Text('추천단가: '),
-                                                        Text(
-                                                          i['추천가'],
-                                                          style: TextStyle(
-                                                              fontFamily:
-                                                              'Strong',
-                                                              color: Colors.red,
-                                                              fontSize: 20),
-                                                        ),
-                                                      ],
+                                                    Text('추천단가: '),
+                                                    Text(
+                                                      i['추천가'],
+                                                      style: TextStyle(
+                                                          fontFamily:
+                                                          'Strong',
+                                                          color: Colors.red,
+                                                          fontSize: 20),
                                                     ),
-                                                    Row(
-                                                      children: [
-                                                        Text('목표가: '),
-                                                        Text(
-                                                          i['목표가'],
-                                                          style: TextStyle(
-                                                              fontFamily:
-                                                              'Strong',
-                                                              color: Colors.red,
-                                                              fontSize: 20),
-                                                        ),
-                                                      ],
-                                                    ),
-
                                                   ],
                                                 ),
+                                                Row(
+                                                  children: [
+                                                    Text('목표가: '),
+                                                    Text(
+                                                      i['목표가'],
+                                                      style: TextStyle(
+                                                          fontFamily:
+                                                          'Strong',
+                                                          color: Colors.red,
+                                                          fontSize: 20),
+                                                    ),
+                                                  ],
+                                                ),
+
                                                 Container(
                                                   child: Card(
                                                     elevation: 10,
@@ -376,7 +370,7 @@ class _TofuState extends State<Tofu> {
                                                       EdgeInsets.all(10),
                                                       child: Text(
                                                         i['이유'].replaceAll("\\n", "\n"),
-                                                        maxLines: 20,
+                                                        maxLines: 40,
                                                         overflow: TextOverflow
                                                             .ellipsis,
                                                       ),

@@ -1,15 +1,15 @@
 import 'package:firebase_admob/firebase_admob.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:flutter/material.dart';
 import 'package:stockdiary/Diary.dart';
 import 'package:stockdiary/Recommend.dart';
+import 'package:stockdiary/question.dart';
 
 import 'TOFU.dart';
 
@@ -25,6 +25,8 @@ class _HomePageState extends State<HomePage> {
     keywords: <String>['flutter', 'firebase', 'admob'],
     testDevices: <String>[],
   );
+  late FirebaseMessaging messaging;
+
   int _rewardPoints = 0;
   BannerAd bannerAd = BannerAd(
     adUnitId: 'ca-app-pub-6925657557995580/7753030928',
@@ -34,6 +36,8 @@ class _HomePageState extends State<HomePage> {
       print("BannerAd event is $event");
     },
   );
+
+  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
 
   Future<void> _signInAnonymously() async {
     if (FirebaseAuth.instance.currentUser == null) {
@@ -63,7 +67,51 @@ class _HomePageState extends State<HomePage> {
     bannerAd
       ..load()
       ..show();
+
     _initRewardedVideoAdListener();
+
+    messaging = FirebaseMessaging.instance;
+    messaging.getToken().then((value) {
+      print(value);
+    });
+    FirebaseMessaging.onMessage.listen((RemoteMessage event) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text("추천주 도착!"),
+              content: Text(event.notification!.body!),
+              actions: [
+                TextButton(
+                  child: Text("Ok"),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                )
+              ],
+            );
+          });
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text("추천주 도착!"),
+              content: Text(message.notification!.body!),
+              actions: [
+                TextButton(
+                  child: Text("Ok"),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                )
+              ],
+            );
+          });
+    });
   }
 
   @override
@@ -82,13 +130,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget Title() {
-    return Center(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0,20,0,0),
+      child: Center(
         child: Container(
-      child: Text(
-        '주식 일지',
-        style: TextStyle(fontFamily: 'Strong', fontSize: 70),
+          child: Text(
+            '주식 일지',
+            style: TextStyle(fontFamily: 'Strong', fontSize: 50),
+          ),
+        ),
       ),
-    ));
+    );
   }
 
   Widget maemae() {
@@ -207,23 +259,24 @@ class _HomePageState extends State<HomePage> {
                           actions: [
                             FlatButton(
                               onPressed: () {
+                                _initRewardedVideoAdListener();
                                 Navigator.pop(context, "네");
-                                showDialog(context: context,  builder: (context) {
-                                  return AlertDialog(
-                                    title: Text('로딩중'),
-                                    content: CircularProgressIndicator(),
-                                    actions: [
-                                      FlatButton(
-                                          onPressed: () {
-                                            Navigator.pop(context, "ok");
-
-                                          },
-                                          child: Text('취소'))
-                                    ],
-                                  );
-                                });
+                                showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return AlertDialog(
+                                        title: Text('로딩중'),
+                                        content: CircularProgressIndicator(),
+                                        actions: [
+                                          FlatButton(
+                                              onPressed: () {
+                                                Navigator.pop(context, "ok");
+                                              },
+                                              child: Text('취소'))
+                                        ],
+                                      );
+                                    });
                                 _showRewardedAd();
-
                               },
                               child: Text('네'),
                             ),
@@ -270,36 +323,77 @@ class _HomePageState extends State<HomePage> {
           ),
         ));
   }
+  Widget question() {
+    return Container(
+        height: 120,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Card(
+            color: Color.fromARGB(255, 187, 222, 251),
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Question(),
+                  ),
+                );
+              },
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Material(
+                      child: InkWell(
+                        child: Image.asset(
+                          "assets/images/aa.png",
+                          scale: 10,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                  Text(
+                    '종목 문의',
+                    style: TextStyle(
+                        fontFamily: 'Strong', fontSize: 30, color: Colors.black),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ));
+  }
+
 
   void _showRewardedAd() {
     //RewardedVideoAdEvent must be loaded to show video ad thus we check and show it via listener
     //Tip: You chould show a loading spinner while waiting it to be loaded.
-    RewardedVideoAd.instance
-        .load(adUnitId: 'ca-app-pub-6925657557995580/4492775903',
-    targetingInfo: targetingInfo);
+    RewardedVideoAd.instance.load(
+        adUnitId: 'ca-app-pub-6925657557995580/4492775903',
+        targetingInfo: targetingInfo);
     //TODO: replace it with your own Admob Rewarded ID
   }
+
 
   void _initRewardedVideoAdListener() {
     RewardedVideoAd.instance.listener =
         (RewardedVideoAdEvent event, {String? rewardType, int? rewardAmount}) {
-
       if (event == RewardedVideoAdEvent.loaded) {
-
+        Navigator.pop(context);
         RewardedVideoAd.instance.show();
-      }
-      else if(event == RewardedVideoAdEvent.failedToLoad){
+      } else if (event == RewardedVideoAdEvent.failedToLoad) {
         Navigator.pop(context);
         Navigator.push(
             context,
             MaterialPageRoute(
-            builder: (context) => Tofu(),
+              builder: (context) => Tofu(),
             ));
-      }
-      else if (event == RewardedVideoAdEvent.rewarded) {
+      } else if (event == RewardedVideoAdEvent.rewarded) {
         setState(() {
           // Video ad should be finish to get the reward amount.
           _rewardPoints += rewardAmount!;
+
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -310,4 +404,5 @@ class _HomePageState extends State<HomePage> {
       }
     };
   }
+
 }

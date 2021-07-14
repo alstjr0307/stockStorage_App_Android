@@ -782,7 +782,8 @@ class _DiaryState extends State<Diary> {
                                                     );
                                                   },
                                                   child: Container(
-                                                    height: 200,
+
+
                                                     child: Card(
                                                       color: getMyColor(
                                                         (data[index][i][j]
@@ -906,30 +907,28 @@ class _DiaryState extends State<Diary> {
                                                                   'Strong'),
                                                             ),
                                                             Container(
-                                                              child: Expanded(
-                                                                child: Card(
-                                                                  elevation: 10,
-                                                                  child:
-                                                                      Container(
-                                                                    width: 200,
-                                                                    padding:
-                                                                        EdgeInsets.all(
-                                                                            10),
-                                                                    child: Text(
-                                                                      data[index][i]
-                                                                              [
-                                                                              j]
-                                                                          [
-                                                                          '이유'],
-                                                                      maxLines:
-                                                                          20,
-                                                                      overflow:
-                                                                          TextOverflow
-                                                                              .ellipsis,
-                                                                    ),
-                                                                    color: Color(
-                                                                        0xffFFFFA5),
+                                                              child: Card(
+                                                                elevation: 10,
+                                                                child:
+                                                                    Container(
+                                                                  width: 200,
+                                                                  padding:
+                                                                      EdgeInsets.all(
+                                                                          10),
+                                                                  child: Text(
+                                                                    data[index][i]
+                                                                            [
+                                                                            j]
+                                                                        [
+                                                                        '이유'].replaceAll("\\n", "\n"),
+                                                                    maxLines:
+                                                                        40,
+                                                                    overflow:
+                                                                        TextOverflow
+                                                                            .ellipsis,
                                                                   ),
+                                                                  color: Color(
+                                                                      0xffFFFFA5),
                                                                 ),
                                                               ),
                                                             )
