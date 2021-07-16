@@ -180,7 +180,7 @@ class _RecommendState extends State<Recommend> {
                   fillColor: FlexColor.lightSurface,
                   hintText: '월 선택',
                   contentPadding:
-                      const EdgeInsets.only(left: 14.0, bottom: 1.0, top: 1.0),
+                  const EdgeInsets.only(left: 14.0, bottom: 1.0, top: 1.0),
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.white),
                     borderRadius: BorderRadius.circular(25.7),
@@ -553,11 +553,11 @@ class _RecommendState extends State<Recommend> {
           final data = snapshot.requireData.data();
           var keyss = data!.keys
               .where((k) =>
-                  k.substring(6, 7) == monthController.text.substring(6, 7) &&
-                      k.substring(0, 4) ==
-                          monthController.text.substring(0, 4) ||
-                  k.substring(5, 7) == monthController.text.substring(6, 8) &&
-                      k.substring(0, 4) == monthController.text.substring(0, 4))
+          k.substring(6, 7) == monthController.text.substring(6, 7) &&
+              k.substring(0, 4) ==
+                  monthController.text.substring(0, 4) ||
+              k.substring(5, 7) == monthController.text.substring(6, 8) &&
+                  k.substring(0, 4) == monthController.text.substring(0, 4))
               .toList();
           keyss.sort();
           return Flexible(
@@ -596,7 +596,7 @@ class _RecommendState extends State<Recommend> {
                                 for (var i in data[index])
                                   Padding(
                                     padding:
-                                        const EdgeInsets.fromLTRB(0, 0, 0, 10),
+                                    const EdgeInsets.fromLTRB(0, 0, 0, 10),
                                     child: InkWell(
                                       onLongPress: () {
                                         showDialog(
@@ -617,36 +617,36 @@ class _RecommendState extends State<Recommend> {
                                                   child: Text('네'),
                                                   onPressed:
                                                       () async {
-                                                        List set = data[index];
-                                                        set.remove(i);
-                                                        print(set);
-                                                        if (set.isNotEmpty)
-                                                          {
-                                                          await FirebaseFirestore
-                                                              .instance
-                                                              .collection(_auth
-                                                              .currentUser!
-                                                              .uid)
-                                                              .doc(
-                                                              '추천주 기록')
-                                                              .update({
-                                                            index: set
-                                                          });
-                                                      }
+                                                    List set = data[index];
+                                                    set.remove(i);
+                                                    print(set);
+                                                    if (set.isNotEmpty)
+                                                    {
+                                                      await FirebaseFirestore
+                                                          .instance
+                                                          .collection(_auth
+                                                          .currentUser!
+                                                          .uid)
+                                                          .doc(
+                                                          '추천주 기록')
+                                                          .update({
+                                                        index: set
+                                                      });
+                                                    }
                                                     else {
                                                       print('a');
                                                       await FirebaseFirestore
-                                                              .instance
-                                                              .collection(_auth
-                                                              .currentUser!
-                                                              .uid)
-                                                              .doc(
-                                                              '추천주 기록')
-                                                              .update({
-                                                            index: FieldValue
-                                                                .delete()
-                                                          });
-                                                        }
+                                                          .instance
+                                                          .collection(_auth
+                                                          .currentUser!
+                                                          .uid)
+                                                          .doc(
+                                                          '추천주 기록')
+                                                          .update({
+                                                        index: FieldValue
+                                                            .delete()
+                                                      });
+                                                    }
                                                     Navigator.pop(context);
                                                   },
                                                 ),
@@ -661,15 +661,15 @@ class _RecommendState extends State<Recommend> {
                                         child: Container(
                                           child: Card(
                                             color:
-                                                Color.fromRGBO(225, 248, 220, 10),
+                                            Color.fromRGBO(225, 248, 220, 10),
                                             child: Padding(
                                               padding: const EdgeInsets.all(7.0),
                                               child: Column(
                                                 children: [
                                                   Padding(
                                                     padding:
-                                                        const EdgeInsets.fromLTRB(
-                                                            0, 0, 0, 8),
+                                                    const EdgeInsets.fromLTRB(
+                                                        0, 0, 0, 8),
                                                     child: Row(
                                                       children: [
                                                         Text('종목: '),
@@ -698,8 +698,8 @@ class _RecommendState extends State<Recommend> {
                                                   ),
                                                   Row(
                                                     mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceEvenly,
+                                                    MainAxisAlignment
+                                                        .spaceEvenly,
                                                     children: [
                                                       Row(
                                                         children: [
@@ -721,7 +721,7 @@ class _RecommendState extends State<Recommend> {
                                                             i['손절가'],
                                                             style: TextStyle(
                                                                 fontFamily:
-                                                                    'Strong',
+                                                                'Strong',
                                                                 color: Colors.red,
                                                                 fontSize: 20),
                                                           )
@@ -736,7 +736,7 @@ class _RecommendState extends State<Recommend> {
                                                       child: Container(
                                                         width: 500,
                                                         padding:
-                                                            EdgeInsets.all(10),
+                                                        EdgeInsets.all(10),
                                                         child: Text(
                                                           i['기타'].replaceAll("\\n", "\n"),
                                                           maxLines: 40,
@@ -768,9 +768,9 @@ class _RecommendState extends State<Recommend> {
                     decoration: BoxDecoration(
                         border: Border(
                             bottom: BorderSide(
-                      color: Colors.black,
-                      width: 3,
-                    ))),
+                              color: Colors.black,
+                              width: 3,
+                            ))),
                   ),
               ],
             ),

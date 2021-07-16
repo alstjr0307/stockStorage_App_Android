@@ -9,9 +9,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:stockdiary/Diary.dart';
 import 'package:stockdiary/Recommend.dart';
-import 'package:stockdiary/question.dart';
 
 import 'TOFU.dart';
+import 'domesticPost.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -124,6 +124,7 @@ class _HomePageState extends State<HomePage> {
           maemae(),
           recommend(),
           tofu(),
+          info(),
         ],
       ),
     );
@@ -238,7 +239,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ));
   }
-
+  late Widget widg;
   Widget tofu() {
     return Container(
         height: 120,
@@ -276,6 +277,7 @@ class _HomePageState extends State<HomePage> {
                                         ],
                                       );
                                     });
+                                widg = Tofu();
                                 _showRewardedAd();
                               },
                               child: Text('네'),
@@ -323,40 +325,80 @@ class _HomePageState extends State<HomePage> {
           ),
         ));
   }
-  Widget question() {
+
+  Widget info() {
     return Container(
         height: 120,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Card(
-            color: Color.fromARGB(255, 187, 222, 251),
+            color: Colors.black,
             child: InkWell(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Question(),
-                  ),
-                );
+                print('리워드: $_rewardPoints');
+                if (_rewardPoints == 0 || _rewardPoints % 5 == 0) {
+                  showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: Text('정보글'),
+                          content: Text('광고를 시청해야합니다\n시청하시겠습니까?'),
+                          actions: [
+                            FlatButton(
+                              onPressed: () {
+                                _initRewardedVideoAdListener();
+                                Navigator.pop(context, "네");
+                                showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return AlertDialog(
+                                        title: Text('로딩중'),
+                                        content: CircularProgressIndicator(),
+                                        actions: [
+                                          FlatButton(
+                                              onPressed: () {
+                                                Navigator.pop(context, "ok");
+                                              },
+                                              child: Text('취소'))
+                                        ],
+                                      );
+                                    });
+                                widg = Info();
+                                _showRewardedAd2();
+                              },
+                              child: Text('네'),
+                            ),
+                            FlatButton(
+                                onPressed: () {
+                                  Navigator.pop(context, "아니요");
+                                },
+                                child: Text('취소'))
+                          ],
+                        );
+                      });
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Info(),
+                    ),
+                  );
+                  _rewardPoints += 1;
+                }
               },
               child: Row(
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Material(
-                      child: InkWell(
-                        child: Image.asset(
-                          "assets/images/aa.png",
-                          scale: 10,
-                        ),
-                      ),
+                    child: InkWell(
+                      child: Icon(Icons.info_rounded, size: 40, color: Colors.white,)
                     ),
                   ),
                   SizedBox(width: 20),
                   Text(
-                    '종목 문의',
+                    '주식 정보글',
                     style: TextStyle(
-                        fontFamily: 'Strong', fontSize: 30, color: Colors.black),
+                        fontFamily: 'Strong', fontSize: 30, color: Colors.red),
                   ),
                 ],
               ),
@@ -364,7 +406,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ));
   }
-
 
   void _showRewardedAd() {
     //RewardedVideoAdEvent must be loaded to show video ad thus we check and show it via listener
@@ -374,6 +415,15 @@ class _HomePageState extends State<HomePage> {
         targetingInfo: targetingInfo);
     //TODO: replace it with your own Admob Rewarded ID
   }
+  void _showRewardedAd2() {
+    //RewardedVideoAdEvent must be loaded to show video ad thus we check and show it via listener
+    //Tip: You chould show a loading spinner while waiting it to be loaded.
+    RewardedVideoAd.instance.load(
+        adUnitId: 'ca-app-pub-6925657557995580/5956813074',
+        targetingInfo: targetingInfo);
+    //TODO: replace it with your own Admob Rewarded ID
+  }
+
 
 
   void _initRewardedVideoAdListener() {
@@ -387,7 +437,7 @@ class _HomePageState extends State<HomePage> {
         Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => Tofu(),
+              builder: (context) => widg,
             ));
       } else if (event == RewardedVideoAdEvent.rewarded) {
         setState(() {
@@ -397,9 +447,10 @@ class _HomePageState extends State<HomePage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => Tofu(),
+              builder: (context) => widg,
             ),
           );
+
         });
       }
     };
