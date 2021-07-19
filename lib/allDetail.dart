@@ -13,8 +13,10 @@ import 'dart:convert';
 import 'dart:async';
 
 import 'package:back_button_interceptor/back_button_interceptor.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:intl/intl.dart';
+
+import 'HomePage.dart';
 
 class allDetail extends StatefulWidget {
   final int index;
@@ -47,11 +49,17 @@ class _allDetailState extends State<allDetail>
   var userid;
   var likecount;
   late Future _future;
+  Future detaillog() async {
+    await analytics.setCurrentScreen(
+      screenName: '게시물'+widget.index.toString(),
 
+    );
+  } //앱
   //백버튼 작용
   @override
   initState() {
     super.initState();
+    detaillog();
     _future = getPostData(widget.index, content);
     BackButtonInterceptor.add(myInterceptor);
   }
@@ -184,8 +192,7 @@ class _allDetailState extends State<allDetail>
     final response = await http.get(
       Uri.http('13.125.62.90', "api/v1/BlogPosts/${postId}/"),
     ); //게시물 가져오기
-    print(response.statusCode);
-    print('포스트 ${postId}');
+
     if (response.statusCode == 200) {
       // 만약 서버가 OK 응답을 반환하면, JSON을 파싱합니다.
       content = jsonDecode(utf8.decode(response.bodyBytes));
@@ -220,9 +227,7 @@ class _allDetailState extends State<allDetail>
           padding: const EdgeInsets.fromLTRB(4, 10, 4, 20),
           child: HtmlWidget(
             content,
-            onTapImage: (src) {
-              print(src);
-            },
+
 
           ),
         ),

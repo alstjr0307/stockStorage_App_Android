@@ -1,17 +1,21 @@
-import 'package:firebase_admob/firebase_admob.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:stockdiary/Diary.dart';
-import 'package:stockdiary/Recommend.dart';
-
+import 'Diary.dart';
+import 'Recommend.dart';
 import 'TOFU.dart';
+import 'alarm.dart';
 import 'domesticPost.dart';
+
+const int maxFailedLoadAttempts = 3;
+
 
 class HomePage extends StatefulWidget {
   @override
@@ -19,25 +23,25 @@ class HomePage extends StatefulWidget {
 }
 
 FirebaseAuth auth = FirebaseAuth.instance;
+FirebaseAnalytics analytics = FirebaseAnalytics();
 
 class _HomePageState extends State<HomePage> {
-  static MobileAdTargetingInfo targetingInfo = MobileAdTargetingInfo(
-    keywords: <String>['flutter', 'firebase', 'admob'],
-    testDevices: <String>[],
-  );
   late FirebaseMessaging messaging;
-
+  RewardedAd? _rewardedAd;
+  int _numRewardedLoadAttempts = 0;
+  InterstitialAd? _interstitialAd;
+  int _numInterstitialLoadAttempts = 0;
   int _rewardPoints = 0;
-  BannerAd bannerAd = BannerAd(
-    adUnitId: 'ca-app-pub-6925657557995580/7753030928',
-    size: AdSize.banner,
-    targetingInfo: targetingInfo,
-    listener: (MobileAdEvent event) {
-      print("BannerAd event is $event");
-    },
-  );
+  int flag = 0;
+  InterstitialAd? _alarmAd;
+
+
+  int _numalarmLoadAttempts = 0;
 
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  Future logAppOpen() async {
+    await analytics.logAppOpen();
+  } //앱 켰을때 로그 남기기
 
   Future<void> _signInAnonymously() async {
     if (FirebaseAuth.instance.currentUser == null) {
@@ -51,29 +55,40 @@ class _HomePageState extends State<HomePage> {
             .collection(auth.currentUser!.uid)
             .doc('추천주 기록')
             .set({});
-        print('로그인');
       } catch (e) {}
     }
+    analytics.setUserProperty(name: 'name', value: auth.currentUser!.uid);
   }
+
+  Future homelog() async {
+    await analytics.setCurrentScreen(
+      screenName: '홈',
+      screenClassOverride: 'home',
+    );
+  } //앱
+
+  late BannerAd banner;
+  final String iOSTestId = 'ca-app-pub-6925657557995580/7108082955';
+  final String androidTestId = 'ca-app-pub-6925657557995580/7753030928';
 
   @override
   void initState() {
-    super.initState();
-    _signInAnonymously();
-    FirebaseAdMob.instance.initialize(
-        appId: Platform.isIOS
-            ? 'ca-app-pub-6925657557995580~2827388755' // iOS Test App ID
-            : 'ca-app-pub-6925657557995580~2827388755'); // Android Test App ID
-    bannerAd
-      ..load()
-      ..show();
-
+    _createInterstitialAd();
+    _createAlarmAd();
     _initRewardedVideoAdListener();
+    logAppOpen();
+    _signInAnonymously();
+    homelog();
+
+    banner = BannerAd(
+      size: AdSize.banner,
+      adUnitId: Platform.isIOS ? iOSTestId : androidTestId,
+      listener: BannerAdListener(),
+      request: AdRequest(),
+    )..load();
 
     messaging = FirebaseMessaging.instance;
-    messaging.getToken().then((value) {
-      print(value);
-    });
+    messaging.getToken().then((value) {});
     FirebaseMessaging.onMessage.listen((RemoteMessage event) {
       showDialog(
           context: context,
@@ -94,7 +109,6 @@ class _HomePageState extends State<HomePage> {
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
-
       showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -112,27 +126,68 @@ class _HomePageState extends State<HomePage> {
             );
           });
     });
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Title(),
-          maemae(),
-          recommend(),
-          tofu(),
-          info(),
-        ],
-      ),
-    );
+    TargetPlatform os = Theme.of(context).platform;
+    if (flag == 1)
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          actions: [
+            IconButton(
+                onPressed: () {
+                  _showAlarmAd();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Alarm(),
+                    ),
+                  );
+                },
+                icon: Image.asset("assets/images/bell.png"))
+          ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [Title(), maemae(), recommend(), tofu(), info()],
+              ),
+            ),
+            Container(
+              height: 50.0,
+              child: AdWidget(
+                ad: banner,
+              ),
+            ),
+          ],
+        ),
+      );
+    else
+      return Scaffold(
+        body: Center(
+            child: Container(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 30),
+              Text(
+                '로딩중입니다',
+              )
+            ],
+          ),
+        )),
+      );
   }
 
   Widget Title() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(0,20,0,0),
+      padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
       child: Center(
         child: Container(
           child: Text(
@@ -146,7 +201,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget maemae() {
     return Container(
-        height: 120,
+        height: 100,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Card(
@@ -195,7 +250,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget recommend() {
     return Container(
-        height: 120,
+        height: 100,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Card(
@@ -239,17 +294,16 @@ class _HomePageState extends State<HomePage> {
           ),
         ));
   }
-  late Widget widg;
+
   Widget tofu() {
     return Container(
-        height: 120,
+        height: 100,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Card(
             color: Colors.black,
             child: InkWell(
               onTap: () {
-                print('리워드: $_rewardPoints');
                 if (_rewardPoints == 0 || _rewardPoints % 5 == 0) {
                   showDialog(
                       context: context,
@@ -260,8 +314,8 @@ class _HomePageState extends State<HomePage> {
                           actions: [
                             FlatButton(
                               onPressed: () {
-                                _initRewardedVideoAdListener();
                                 Navigator.pop(context, "네");
+
                                 showDialog(
                                     context: context,
                                     builder: (context) {
@@ -277,7 +331,7 @@ class _HomePageState extends State<HomePage> {
                                         ],
                                       );
                                     });
-                                widg = Tofu();
+
                                 _showRewardedAd();
                               },
                               child: Text('네'),
@@ -328,71 +382,31 @@ class _HomePageState extends State<HomePage> {
 
   Widget info() {
     return Container(
-        height: 120,
+        height: 100,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Card(
             color: Colors.black,
             child: InkWell(
               onTap: () {
-                print('리워드: $_rewardPoints');
-                if (_rewardPoints == 0 || _rewardPoints % 5 == 0) {
-                  showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: Text('정보글'),
-                          content: Text('광고를 시청해야합니다\n시청하시겠습니까?'),
-                          actions: [
-                            FlatButton(
-                              onPressed: () {
-                                _initRewardedVideoAdListener();
-                                Navigator.pop(context, "네");
-                                showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return AlertDialog(
-                                        title: Text('로딩중'),
-                                        content: CircularProgressIndicator(),
-                                        actions: [
-                                          FlatButton(
-                                              onPressed: () {
-                                                Navigator.pop(context, "ok");
-                                              },
-                                              child: Text('취소'))
-                                        ],
-                                      );
-                                    });
-                                widg = Info();
-                                _showRewardedAd2();
-                              },
-                              child: Text('네'),
-                            ),
-                            FlatButton(
-                                onPressed: () {
-                                  Navigator.pop(context, "아니요");
-                                },
-                                child: Text('취소'))
-                          ],
-                        );
-                      });
-                } else {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Info(),
-                    ),
-                  );
-                  _rewardPoints += 1;
-                }
+                _showInterstitialAd();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Info(),
+                  ),
+                );
               },
               child: Row(
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: InkWell(
-                      child: Icon(Icons.info_rounded, size: 40, color: Colors.white,)
-                    ),
+                        child: Icon(
+                      Icons.info_rounded,
+                      size: 40,
+                      color: Colors.white,
+                    )),
                   ),
                   SizedBox(width: 20),
                   Text(
@@ -407,53 +421,155 @@ class _HomePageState extends State<HomePage> {
         ));
   }
 
+  void _createInterstitialAd() {
+    InterstitialAd.load(
+        adUnitId: 'ca-app-pub-6925657557995580/8468539731',
+        request: AdRequest(),
+        adLoadCallback: InterstitialAdLoadCallback(
+          onAdLoaded: (InterstitialAd ad) {
+            _interstitialAd = ad;
+            _numInterstitialLoadAttempts = 0;
+          },
+          onAdFailedToLoad: (LoadAdError error) {
+            _numInterstitialLoadAttempts += 1;
+            _interstitialAd = null;
+            if (_numInterstitialLoadAttempts <= maxFailedLoadAttempts) {
+              _createInterstitialAd();
+            }
+          },
+        ));
+  }
+
+  void _showInterstitialAd() {
+    if (_interstitialAd == null) {
+      return;
+    }
+    _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdShowedFullScreenContent: (InterstitialAd ad) =>
+          print('ad onAdShowedFullScreenContent.'),
+      onAdDismissedFullScreenContent: (InterstitialAd ad) {
+        ad.dispose();
+        _createInterstitialAd();
+      },
+      onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+        ad.dispose();
+        _createInterstitialAd();
+      },
+    );
+    _interstitialAd!.show();
+    _interstitialAd = null;
+  }
+
+  void _createAlarmAd() {
+    InterstitialAd.load(
+        adUnitId: 'ca-app-pub-6925657557995580/1248239853',
+        request: AdRequest(),
+        adLoadCallback: InterstitialAdLoadCallback(
+          onAdLoaded: (InterstitialAd ad) {
+            _alarmAd = ad;
+            _numalarmLoadAttempts = 0;
+          },
+          onAdFailedToLoad: (LoadAdError error) {
+            _numalarmLoadAttempts += 1;
+            _alarmAd = null;
+            if (_numalarmLoadAttempts <= maxFailedLoadAttempts) {
+              _createAlarmAd();
+            }
+          },
+        ));
+  }
+
+  void _showAlarmAd() {
+    if (_alarmAd == null) {
+      return;
+    }
+    _alarmAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdShowedFullScreenContent: (InterstitialAd ad) =>
+          print('ad onAdShowedFullScreenContent.'),
+      onAdDismissedFullScreenContent: (InterstitialAd ad) {
+        ad.dispose();
+        _createAlarmAd();
+      },
+      onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+        ad.dispose();
+        _createAlarmAd();
+      },
+    );
+    _alarmAd!.show();
+    _alarmAd = null;
+  }
+
   void _showRewardedAd() {
+    if (_rewardedAd == null) {
+      Navigator.pop(context);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Tofu(),
+        ),
+      );
+      return;
+    }
+    _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdShowedFullScreenContent: (RewardedAd ad) {
+        Navigator.pop(context);
+      },
+      onAdDismissedFullScreenContent: (RewardedAd ad) {
+        ad.dispose();
+        _initRewardedVideoAdListener();
+      },
+      onAdFailedToShowFullScreenContent: (RewardedAd ad, AdError error) {
+        Navigator.pop(context);
+
+        ad.dispose();
+        _initRewardedVideoAdListener();
+      },
+    );
+
+    _rewardedAd!.show(onUserEarnedReward: (RewardedAd ad, RewardItem reward) {
+      setState(() {
+        // Video ad should be finish to get the reward amount.
+        _rewardPoints += reward.amount.toInt();
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Tofu(),
+          ),
+        );
+      });
+    });
+    _rewardedAd = null;
+
     //RewardedVideoAdEvent must be loaded to show video ad thus we check and show it via listener
     //Tip: You chould show a loading spinner while waiting it to be loaded.
-    RewardedVideoAd.instance.load(
-        adUnitId: 'ca-app-pub-6925657557995580/4492775903',
-        targetingInfo: targetingInfo);
+
     //TODO: replace it with your own Admob Rewarded ID
   }
-  void _showRewardedAd2() {
-    //RewardedVideoAdEvent must be loaded to show video ad thus we check and show it via listener
-    //Tip: You chould show a loading spinner while waiting it to be loaded.
-    RewardedVideoAd.instance.load(
-        adUnitId: 'ca-app-pub-6925657557995580/5956813074',
-        targetingInfo: targetingInfo);
-    //TODO: replace it with your own Admob Rewarded ID
-  }
-
-
 
   void _initRewardedVideoAdListener() {
-    RewardedVideoAd.instance.listener =
-        (RewardedVideoAdEvent event, {String? rewardType, int? rewardAmount}) {
-      if (event == RewardedVideoAdEvent.loaded) {
-        Navigator.pop(context);
-        RewardedVideoAd.instance.show();
-      } else if (event == RewardedVideoAdEvent.failedToLoad) {
-        Navigator.pop(context);
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => widg,
-            ));
-      } else if (event == RewardedVideoAdEvent.rewarded) {
-        setState(() {
-          // Video ad should be finish to get the reward amount.
-          _rewardPoints += rewardAmount!;
+    RewardedAd.load(
+      adUnitId: 'ca-app-pub-6925657557995580/4492775903',
+      request: AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (RewardedAd ad) {
+          _rewardedAd = ad;
+          _numRewardedLoadAttempts = 0;
+          flag = 1;
+          setState(() {});
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          _rewardedAd = null;
+          _numRewardedLoadAttempts += 1;
+          flag = 1;
+          print('flag'+ flag.toString());
+          setState(() {});
+          if (_numRewardedLoadAttempts <= maxFailedLoadAttempts) {
 
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => widg,
-            ),
-          );
-
-        });
-      }
-    };
+            _initRewardedVideoAdListener();
+          }
+        },
+      ),
+    );
   }
-
 }

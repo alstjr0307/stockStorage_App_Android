@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:core';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:searchable_dropdown/searchable_dropdown.dart';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
 import 'package:month_picker_dialog/month_picker_dialog.dart';
+
+import 'HomePage.dart';
 
 class Tofu extends StatefulWidget {
   @override
@@ -46,10 +48,15 @@ class _TofuState extends State<Tofu> {
     });
     return items;
   }
-
+  Future tofulog() async {
+    await analytics.setCurrentScreen(
+      screenName: '추천주제공',
+    );
+  } //앱
   @override
   void initState() {
     super.initState();
+    tofulog();
     if (DateTime.now().toString().substring(5, 6) == '0') {
       monthController.text = DateTime.now().toString().substring(0, 4) +
           '년 ' +
@@ -104,7 +111,7 @@ class _TofuState extends State<Tofu> {
             onTap: () {
               Navigator.pop(context);
             },
-    ),
+          ),
         ],
         ),
         body: Column(

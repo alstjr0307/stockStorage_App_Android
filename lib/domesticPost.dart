@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'HomePage.dart';
 import 'domesticsearchpage.dart';
 
 import 'dart:async';
 import 'allDetail.dart';
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:intl/intl.dart';
 
 class Info extends StatefulWidget {
@@ -28,12 +29,17 @@ class _InfoState extends State<Info>
   var posttype = '';
   var sharedPreferences;
   var token;
+  Future domesticlog() async {
+    await analytics.setCurrentScreen(
+      screenName: '정보글',
+    );
+  } //앱
   @override
   void initState() {
     _getMoreData(page);
 
     super.initState();
-
+    domesticlog();
 
     _sc.addListener(() {
       if (_sc.position.pixels == _sc.position.maxScrollExtent &&
@@ -41,7 +47,7 @@ class _InfoState extends State<Info>
         _getMoreData(page);
       }
     });
-    print('이닛');
+
   }
 
   @override
@@ -59,8 +65,6 @@ class _InfoState extends State<Info>
     //데이터 추가하기
     List tList = [];
 
-    sharedPreferences = await SharedPreferences.getInstance();
-    token = sharedPreferences.getString("token"); //token 값 불러오기
 
     if (!isLoading) {
       setState(() {
@@ -69,11 +73,10 @@ class _InfoState extends State<Info>
 
       var url = "http://13.125.62.90/api/v1/BlogPostsList/?category=D&page=" +
           (index + 1).toString();
-      print('url'+url);
+
       final response = await dio.get(url);
       maxpage = (response.data['count'] - 1) ~/ 10 + 1;
-      print('맥페${maxpage}');
-      print(response.data['results']);
+
       tList = [];
 
       for (int i = 0; i < response.data['results'].length; i++) {
@@ -81,7 +84,7 @@ class _InfoState extends State<Info>
         tList[i]['time'] = DateFormat("M월dd일 H:m").format(DateTime.parse(tList[i]['create_dt']));
       }
 
-      print('중간중간');
+
       setState(() {
         isLoading = false;
         posts.addAll(tList);
@@ -104,12 +107,12 @@ class _InfoState extends State<Info>
       child: Container(
         child: RefreshIndicator(
           child: ListView.builder(
-              itemCount: posts.length +1,
+              itemCount: posts.length+1,
               controller: _sc,
               // Add one more item for progress indicator
               padding: EdgeInsets.symmetric(vertical: 8.0),
               itemBuilder: (BuildContext context, int index) {
-                print('index${index}');
+
                 if (index == posts.length) {
                   return _buildProgressIndicator();
 

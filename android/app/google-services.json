@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "290270590872-feu6gnn0pelcl8c86stmq6tg1s3ukl0o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "www.stockstorage.stockdiary",
+            "certificate_hash": "42cc0a2ec19b0451600f643e548c45638e1a29d1"
+          }
+        },
+        {
+          "client_id": "290270590872-idsfqvrq5mt4auuokgm0uc6csl2ln8pj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "www.stockstorage.stockdiary",
+            "certificate_hash": "446239e7e95d3b415f9e24e7b73aca319fe7335a"
+          }
+        },
+        {
           "client_id": "290270590872-b7eok9c6kg6l32kdplu7gnfa6u8hb5k3.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,10 +45,18 @@
             {
               "client_id": "290270590872-b7eok9c6kg6l32kdplu7gnfa6u8hb5k3.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "290270590872-ec93rb0infsvimp17rv45o5haputbmcc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "www.stockstorage.stockmemo"
+              }
             }
           ]
         }
-      }
+      },
+      "admob_app_id": "ca-app-pub-6925657557995580~2827388755"
     }
   ],
   "configuration_version": "1"

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:core';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:searchable_dropdown/searchable_dropdown.dart';
+import 'package:custom_searchable_dropdown/custom_searchable_dropdown.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
 import 'package:month_picker_dialog/month_picker_dialog.dart';
+
+import 'HomePage.dart';
 
 class Recommend extends StatefulWidget {
   @override
@@ -23,7 +25,7 @@ class _RecommendState extends State<Recommend> {
   bool asTabs = false;
   late String selectedValue;
 
-  final List<DropdownMenuItem> items = [];
+  final List items = [];
   var selectedItems;
   String result = '';
   FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -42,18 +44,21 @@ class _RecommendState extends State<Recommend> {
     var json = jsonDecode(data);
     setState(() {
       for (Map stock in json) {
-        items.add(DropdownMenuItem(
-          child: Text(stock["name"]),
-          value: stock["name"],
-        ));
+        items.add(stock['name']);
       }
     });
     return items;
   }
+  Future recommendlog() async {
+    await analytics.setCurrentScreen(
+      screenName: '추천주기록',
 
+    );
+  } //앱
   @override
   void initState() {
     super.initState();
+    recommendlog();
     if (DateTime.now().toString().substring(5, 6) == '0') {
       monthController.text = DateTime.now().toString().substring(0, 4) +
           '년 ' +
@@ -333,20 +338,15 @@ class _RecommendState extends State<Recommend> {
           Row(
             children: [
               Expanded(
-                child: SearchableDropdown.single(
+                child: CustomSearchableDropDown(
+                  label: '클릭하여 종목선택',
                   items: items,
-                  value: selectedItems,
-                  hint: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text("종목"),
-                  ),
-                  searchHint: "종목 선택",
+                  dropDownMenuItems: items,
+
                   onChanged: (value) {
-                    setState(() {
-                      selectedItems = value;
-                    });
+                    selectedItems = value;
                   },
-                  isExpanded: true,
+
                 ),
               ),
             ],
@@ -447,7 +447,7 @@ class _RecommendState extends State<Recommend> {
                     if (whyController.text == "") {
                       why = "생략";
                     }
-                    print('초기');
+
                     var newset = {
                       "매수추천가": priceController.text,
                       "종목": selectedItems,
@@ -463,11 +463,10 @@ class _RecommendState extends State<Recommend> {
                       try {
                         set = ds[date];
                       } catch (e) {
-                        print('에러뜸');
+
                       }
                     });
-                    print('입력할때' + set.toString());
-                    print('입력');
+
                     set.add(newset);
 
                     await firestore
@@ -619,7 +618,7 @@ class _RecommendState extends State<Recommend> {
                                                       () async {
                                                     List set = data[index];
                                                     set.remove(i);
-                                                    print(set);
+
                                                     if (set.isNotEmpty)
                                                     {
                                                       await FirebaseFirestore
@@ -634,7 +633,7 @@ class _RecommendState extends State<Recommend> {
                                                       });
                                                     }
                                                     else {
-                                                      print('a');
+
                                                       await FirebaseFirestore
                                                           .instance
                                                           .collection(_auth
