@@ -1,21 +1,29 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_dropdown_alert/alert_controller.dart';
+import 'package:flutter_dropdown_alert/model/data_alert.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'dart:io';
+
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:kakao_flutter_sdk/all.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stockdiary/Profile.dart';
+import 'package:stockdiary/changenickname.dart';
+import 'package:dio/dio.dart';
+import 'dart:async';
 import 'Diary.dart';
 import 'Recommend.dart';
 import 'TOFU.dart';
 import 'alarm.dart';
 import 'domesticPost.dart';
+import 'kakaologin.dart';
 
 const int maxFailedLoadAttempts = 3;
-
 
 class HomePage extends StatefulWidget {
   @override
@@ -27,18 +35,26 @@ FirebaseAnalytics analytics = FirebaseAnalytics();
 
 class _HomePageState extends State<HomePage> {
   late FirebaseMessaging messaging;
-  RewardedAd? _rewardedAd;
-  int _numRewardedLoadAttempts = 0;
+  InterstitialAd? _recommendAd;
+  int _numrecommendLoadAttempts = 0;
   InterstitialAd? _interstitialAd;
   int _numInterstitialLoadAttempts = 0;
-  int _rewardPoints = 0;
   int flag = 0;
-  InterstitialAd? _alarmAd;
+  final dio = new Dio();
+  var token;
+  var username;
+  var sharedPreferences;
+  var userid;
 
+  checkLoginStatus() async {
+    sharedPreferences = await SharedPreferences.getInstance();
+    if (sharedPreferences.getString("token") != null) {
+      username = sharedPreferences.getString("nickname");
+      token = sharedPreferences.getString("token");
+      userid = sharedPreferences.getInt("userID");
+    }
+  }
 
-  int _numalarmLoadAttempts = 0;
-
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   Future logAppOpen() async {
     await analytics.logAppOpen();
   } //앱 켰을때 로그 남기기
@@ -60,6 +76,50 @@ class _HomePageState extends State<HomePage> {
     analytics.setUserProperty(name: 'name', value: auth.currentUser!.uid);
   }
 
+  String msg = '.';
+  bool _isKakaoTalkInstalled = false;
+
+  _initKakaoTalkInstalled() async {
+    final installed = await isKakaoTalkInstalled();
+
+    setState(() {
+      _isKakaoTalkInstalled = installed;
+    });
+  }
+
+  _issueAccessToken(String authCode) async {
+    try {
+      var token = await AuthApi.instance.issueAccessToken(authCode);
+      AccessTokenStore.instance.toStore(token);
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LoginResult(),
+          ));
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
+  _loginWithKakao() async {
+
+    try {
+      var code = await AuthCodeClient.instance.request();
+      await _issueAccessToken(code);
+
+    } catch (e) {
+
+    }
+  }
+
+  _loginWithTalk() async {
+
+    try {
+      var code = await AuthCodeClient.instance.requestWithTalk();
+      await _issueAccessToken(code);
+    } catch (e) {}
+  }
+
   Future homelog() async {
     await analytics.setCurrentScreen(
       screenName: '홈',
@@ -67,66 +127,306 @@ class _HomePageState extends State<HomePage> {
     );
   } //앱
 
-  late BannerAd banner;
-  final String iOSTestId = 'ca-app-pub-6925657557995580/7108082955';
-  final String androidTestId = 'ca-app-pub-6925657557995580/7753030928';
+  Future recommendlog() async {
+    await analytics.logEvent(
+      name: '추천주 광고',
+    );
+  } //앱
+
+  Widget CustomDrawer() {
+    return Drawer(
+      // 리스트뷰 추가
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: <Widget>[
+          // 드로워해더 추가
+          Container(
+            height: 500,
+            child: DrawerHeader(
+              decoration: BoxDecoration(
+                color: Color.fromRGBO(255, 210, 138, 1),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (username == null)
+                      Row(
+                        children: [
+                          Text(
+                            '비회원',
+                            style: TextStyle(
+                                fontFamily: 'gyeongi',
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      )
+                    else
+                      Row(
+                        children: [
+                          Container(
+                            child: Text(
+                              username,
+                              style: TextStyle(
+                                  fontFamily: 'gyeongi',
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 10,
+                          ),
+                          FutureBuilder(
+                            builder: (context, snapshot) {
+                              final restaurant = snapshot.data as Map;
+                              if (snapshot.hasData) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      ' | 게시물 ' + restaurant['post'].toString(),
+                                      style: TextStyle(
+                                          fontSize: 13, fontFamily: 'Strong'),
+                                    ),
+                                    SizedBox(height: 5),
+                                    Text(
+                                      ' | 댓글 ' +
+                                          restaurant['comment'].toString(),
+                                      style: TextStyle(
+                                          fontSize: 13, fontFamily: 'Strong'),
+                                    )
+                                  ],
+                                );
+                              } else {
+                                return CircularProgressIndicator(
+                                  color: Colors.red,
+                                );
+                              }
+                            },
+                            future: getProfile(),
+                          ),
+                        ],
+                      ),
+
+                    SizedBox(
+                      height: 20,
+                    ),
+                    if (username == null)
+                      TextButton(
+                        child: Container(
+                          padding: EdgeInsets.fromLTRB(3, 5, 3, 5),
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            shape: BoxShape.rectangle,
+                            border: Border.all(width: 1.0, color: Colors.white),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(30.0)),
+                          ),
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Text(
+                              "로그인",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
+                        ),
+                        onPressed: () {
+
+                          if (_isKakaoTalkInstalled)
+                            _loginWithTalk();
+                          else
+                            _loginWithKakao();
+                        },
+                      ),
+                    if (username != null)
+                      Column(
+                        children: [
+                          RaisedButton(
+                            onPressed: () {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => MyProfile()));
+                            },
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(80.0)),
+                            padding: EdgeInsets.all(0.0),
+                            child: Ink(
+                              decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Color(0xff374ABE),
+                                      Color(0xff64B6FF)
+                                    ],
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(30.0)),
+                              child: Container(
+                                constraints: BoxConstraints(
+                                    maxWidth: 250.0, minHeight: 50.0),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  "내 프로필",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                      fontFamily: 'Strong'),
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: 50,
+                          ),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size(50, 30),
+                                alignment: Alignment.centerLeft),
+                            onPressed: () {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => ChangeNickname()));
+                            },
+                            child: Container(
+                              padding: EdgeInsets.fromLTRB(3, 5, 3, 5),
+                              decoration: BoxDecoration(
+                                color: Colors.black,
+                                shape: BoxShape.rectangle,
+                                border:
+                                    Border.all(width: 1.0, color: Colors.white),
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(30.0)),
+                              ),
+                              child: Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Text(
+                                  "닉네임 변경",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size(50, 30),
+                              alignment: Alignment.centerLeft,
+                            ),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (BuildContext context) {
+                                  return Dialog(
+                                    child: Container(
+                                      padding:
+                                          EdgeInsets.fromLTRB(10, 20, 10, 20),
+                                      child: new Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          new CircularProgressIndicator(),
+                                          SizedBox(
+                                            width: 20,
+                                          ),
+                                          new Text("로그아웃중"),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                              sharedPreferences.clear();
+                              sharedPreferences.commit();
+                              username = null;
+
+                              new Future.delayed(new Duration(seconds: 1), () {
+                                //pop dialog
+                                setState(() {});
+                                Navigator.pop(context);
+                              });
+                            },
+                            child: Container(
+                              padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                              margin: EdgeInsets.all(0),
+                              decoration: BoxDecoration(
+                                color: FlexColor.redLightPrimary,
+                                shape: BoxShape.rectangle,
+                                border:
+                                    Border.all(width: 1.0, color: Colors.white),
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(20.0)),
+                              ),
+                              child: Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Text(
+                                  "로그아웃",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                    //프로필 가기
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // 리스트타일 추가
+        ],
+      ),
+    );
+  }
 
   @override
   void initState() {
+    super.initState();
+    String kakaoAppKey = "fb748431210dc9c7f46b48631a08d670";
+    _initKakaoTalkInstalled();
+    KakaoContext.clientId = kakaoAppKey;
     _createInterstitialAd();
-    _createAlarmAd();
-    _initRewardedVideoAdListener();
+    checkLoginStatus();
     logAppOpen();
     _signInAnonymously();
-    homelog();
-
-    banner = BannerAd(
-      size: AdSize.banner,
-      adUnitId: Platform.isIOS ? iOSTestId : androidTestId,
-      listener: BannerAdListener(),
-      request: AdRequest(),
-    )..load();
-
+    _initRewardedVideoAdListener();
     messaging = FirebaseMessaging.instance;
-    messaging.getToken().then((value) {});
-    FirebaseMessaging.onMessage.listen((RemoteMessage event) {
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text("추천주 도착!"),
-              content: Text(event.notification!.body!),
-              actions: [
-                TextButton(
-                  child: Text("Ok"),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                )
-              ],
-            );
-          });
+    messaging.getToken().then((value) async{
+      sharedPreferences = await SharedPreferences.getInstance();
+      sharedPreferences.setString("pushtoken", value);
+
+
+    });
+
+    FirebaseMessaging.onMessage.listen((event) {
+      sharedPreferences.setString('commentnoti', event.data['body']);
+      AlertController.show(
+        event.data['title'],
+        event.data['body'],
+        TypeAlert.success,
+      );
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text("추천주 도착!"),
-              content: Text(message.notification!.body!),
-              actions: [
-                TextButton(
-                  child: Text("Ok"),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                )
-              ],
-            );
-          });
+      AlertController.show(
+        message.data['title'],
+        message.data['body'],
+        TypeAlert.success,
+      );
     });
-    super.initState();
   }
 
   @override
@@ -134,12 +434,13 @@ class _HomePageState extends State<HomePage> {
     TargetPlatform os = Theme.of(context).platform;
     if (flag == 1)
       return Scaffold(
+        drawer: CustomDrawer(),
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          iconTheme: IconThemeData(color: Colors.black, size: 40),
+          backgroundColor: Color.fromRGBO(240, 175, 142, 100),
           actions: [
             IconButton(
                 onPressed: () {
-                  _showAlarmAd();
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -150,62 +451,60 @@ class _HomePageState extends State<HomePage> {
                 icon: Image.asset("assets/images/bell.png"))
           ],
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [Title(), maemae(), recommend(), tofu(), info()],
-              ),
-            ),
-            Container(
-              height: 50.0,
-              child: AdWidget(
-                ad: banner,
-              ),
-            ),
-          ],
+        body: Container(
+          color: Color.fromRGBO(240, 175, 142, 100),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Title(),
+              toron(),
+              maemae(),
+              recommend(),
+              tofu(),
+              info(),
+            ],
+          ),
         ),
       );
     else
       return Scaffold(
+        backgroundColor: Color.fromRGBO(240, 175, 142, 100),
         body: Center(
-            child: Container(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 30),
-              Text(
-                '로딩중입니다',
-              )
-            ],
+          child: Container(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 30),
+                Text(
+                  '로딩중입니다',
+                ),
+              ],
+            ),
           ),
-        )),
+        ),
       );
   }
 
   Widget Title() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
       child: Center(
         child: Container(
-          child: Text(
-            '주식 일지',
-            style: TextStyle(fontFamily: 'Strong', fontSize: 50),
-          ),
-        ),
+            height: 100,
+            child:
+                Image.asset('assets/images/title.png', fit: BoxFit.fitHeight)),
       ),
     );
   }
 
   Widget maemae() {
     return Container(
-        height: 100,
+        height: 80,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Card(
-            color: Color.fromARGB(255, 187, 222, 251),
+            color: Color.fromRGBO(255, 142, 122, 100),
             child: InkWell(
               onTap: () {
                 Navigator.push(
@@ -219,18 +518,10 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: ClipOval(
-                      child: Material(
-                        child: InkWell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Icon(
-                              Icons.calendar_today_outlined,
-                              size: 50,
-                            ),
-                          ),
-                        ),
-                      ),
+                    child: Icon(
+                      Icons.calendar_today,
+                      color: Colors.white,
+                      size: 40,
                     ),
                   ),
                   SizedBox(width: 20),
@@ -250,11 +541,11 @@ class _HomePageState extends State<HomePage> {
 
   Widget recommend() {
     return Container(
-        height: 100,
+        height: 80,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Card(
-            color: Color.fromARGB(255, 187, 222, 251),
+            color: Color.fromRGBO(255, 142, 122, 100),
             child: InkWell(
               onTap: () {
                 Navigator.push(
@@ -268,16 +559,10 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: ClipOval(
-                      child: Material(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Icon(
-                            Icons.stacked_line_chart,
-                            size: 50,
-                          ),
-                        ),
-                      ),
+                    child: Icon(
+                      Icons.stacked_line_chart,
+                      color: Colors.white,
+                      size: 40,
                     ),
                   ),
                   SizedBox(width: 20),
@@ -297,62 +582,20 @@ class _HomePageState extends State<HomePage> {
 
   Widget tofu() {
     return Container(
-        height: 100,
+        height: 80,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Card(
             color: Colors.black,
             child: InkWell(
               onTap: () {
-                if (_rewardPoints == 0 || _rewardPoints % 5 == 0) {
-                  showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: Text('추천주 확인'),
-                          content: Text('광고를 시청해야합니다\n시청하시겠습니까?'),
-                          actions: [
-                            FlatButton(
-                              onPressed: () {
-                                Navigator.pop(context, "네");
-
-                                showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return AlertDialog(
-                                        title: Text('로딩중'),
-                                        content: CircularProgressIndicator(),
-                                        actions: [
-                                          FlatButton(
-                                              onPressed: () {
-                                                Navigator.pop(context, "ok");
-                                              },
-                                              child: Text('취소'))
-                                        ],
-                                      );
-                                    });
-
-                                _showRewardedAd();
-                              },
-                              child: Text('네'),
-                            ),
-                            FlatButton(
-                                onPressed: () {
-                                  Navigator.pop(context, "아니요");
-                                },
-                                child: Text('취소'))
-                          ],
-                        );
-                      });
-                } else {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Tofu(),
-                    ),
-                  );
-                  _rewardPoints += 1;
-                }
+                _showRewardedAd();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Tofu(),
+                  ),
+                );
               },
               child: Row(
                 children: [
@@ -362,7 +605,7 @@ class _HomePageState extends State<HomePage> {
                       child: InkWell(
                         child: Image.asset(
                           "assets/images/unnamed.png",
-                          scale: 5,
+                          scale: 4,
                         ),
                       ),
                     ),
@@ -382,7 +625,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget info() {
     return Container(
-        height: 100,
+        height: 80,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Card(
@@ -393,7 +636,7 @@ class _HomePageState extends State<HomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => Info(),
+                    builder: (context) => Info(category: 'd'),
                   ),
                 );
               },
@@ -404,7 +647,7 @@ class _HomePageState extends State<HomePage> {
                     child: InkWell(
                         child: Icon(
                       Icons.info_rounded,
-                      size: 40,
+                      size: 30,
                       color: Colors.white,
                     )),
                   ),
@@ -413,6 +656,48 @@ class _HomePageState extends State<HomePage> {
                     '주식 정보글',
                     style: TextStyle(
                         fontFamily: 'Strong', fontSize: 30, color: Colors.red),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ));
+  }
+
+  Widget toron() {
+    return Container(
+        height: 80,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Card(
+            color: Color.fromRGBO(255, 142, 122, 100),
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Info(category: 'f'),
+                  ),
+                );
+              },
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: InkWell(
+                        child: Icon(
+                      Icons.chat,
+                      size: 40,
+                      color: Colors.white,
+                    )),
+                  ),
+                  SizedBox(width: 20),
+                  Text(
+                    '주식 토론방',
+                    style: TextStyle(
+                        fontFamily: 'Strong',
+                        fontSize: 30,
+                        color: Colors.black),
                   ),
                 ],
               ),
@@ -460,116 +745,60 @@ class _HomePageState extends State<HomePage> {
     _interstitialAd = null;
   }
 
-  void _createAlarmAd() {
-    InterstitialAd.load(
-        adUnitId: 'ca-app-pub-6925657557995580/1248239853',
-        request: AdRequest(),
-        adLoadCallback: InterstitialAdLoadCallback(
-          onAdLoaded: (InterstitialAd ad) {
-            _alarmAd = ad;
-            _numalarmLoadAttempts = 0;
-          },
-          onAdFailedToLoad: (LoadAdError error) {
-            _numalarmLoadAttempts += 1;
-            _alarmAd = null;
-            if (_numalarmLoadAttempts <= maxFailedLoadAttempts) {
-              _createAlarmAd();
-            }
-          },
-        ));
-  }
 
-  void _showAlarmAd() {
-    if (_alarmAd == null) {
+  void _showRewardedAd() {
+    if (_recommendAd == null) {
       return;
     }
-    _alarmAd!.fullScreenContentCallback = FullScreenContentCallback(
-      onAdShowedFullScreenContent: (InterstitialAd ad) =>
-          print('ad onAdShowedFullScreenContent.'),
+    _recommendAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdShowedFullScreenContent: (InterstitialAd ad) => print('ss'),
       onAdDismissedFullScreenContent: (InterstitialAd ad) {
         ad.dispose();
-        _createAlarmAd();
+        _initRewardedVideoAdListener();
       },
       onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
         ad.dispose();
-        _createAlarmAd();
-      },
-    );
-    _alarmAd!.show();
-    _alarmAd = null;
-  }
-
-  void _showRewardedAd() {
-    if (_rewardedAd == null) {
-      Navigator.pop(context);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => Tofu(),
-        ),
-      );
-      return;
-    }
-    _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
-      onAdShowedFullScreenContent: (RewardedAd ad) {
-        Navigator.pop(context);
-      },
-      onAdDismissedFullScreenContent: (RewardedAd ad) {
-        ad.dispose();
-        _initRewardedVideoAdListener();
-      },
-      onAdFailedToShowFullScreenContent: (RewardedAd ad, AdError error) {
-        Navigator.pop(context);
-
-        ad.dispose();
         _initRewardedVideoAdListener();
       },
     );
+    _recommendAd!.show();
 
-    _rewardedAd!.show(onUserEarnedReward: (RewardedAd ad, RewardItem reward) {
-      setState(() {
-        // Video ad should be finish to get the reward amount.
-        _rewardPoints += reward.amount.toInt();
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Tofu(),
-          ),
-        );
-      });
-    });
-    _rewardedAd = null;
-
-    //RewardedVideoAdEvent must be loaded to show video ad thus we check and show it via listener
-    //Tip: You chould show a loading spinner while waiting it to be loaded.
-
-    //TODO: replace it with your own Admob Rewarded ID
+    _recommendAd = null;
   }
 
   void _initRewardedVideoAdListener() {
-    RewardedAd.load(
-      adUnitId: 'ca-app-pub-6925657557995580/4492775903',
+    InterstitialAd.load(
+      adUnitId: 'ca-app-pub-6925657557995580/2388764817',
       request: AdRequest(),
-      rewardedAdLoadCallback: RewardedAdLoadCallback(
-        onAdLoaded: (RewardedAd ad) {
-          _rewardedAd = ad;
-          _numRewardedLoadAttempts = 0;
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _recommendAd = ad;
+          _numrecommendLoadAttempts = 0;
           flag = 1;
           setState(() {});
         },
         onAdFailedToLoad: (LoadAdError error) {
-          _rewardedAd = null;
-          _numRewardedLoadAttempts += 1;
+          _numrecommendLoadAttempts += 1;
+          _recommendAd = null;
           flag = 1;
-          print('flag'+ flag.toString());
           setState(() {});
-          if (_numRewardedLoadAttempts <= maxFailedLoadAttempts) {
-
+          if (_numrecommendLoadAttempts <= maxFailedLoadAttempts) {
             _initRewardedVideoAdListener();
           }
         },
       ),
     );
+  }
+
+  Future<Map> getProfile() async {
+    var profileurl =
+        'http://13.125.62.90/api/v1/AuthUser/${userid.toString()}/';
+
+    final responseall = await dio.get(profileurl,
+        options: Options(headers: {"Authorization": "Token $token"}));
+
+    Map profile = responseall.data;
+
+    return profile;
   }
 }

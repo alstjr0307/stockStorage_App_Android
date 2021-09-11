@@ -4,6 +4,9 @@ import 'allDetail.dart';
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 class DomesticSearchPage extends StatefulWidget {
+  final String category;
+
+  DomesticSearchPage({Key? key, required this.category}) : super(key: key);
   @override
   _DomesticSearchPageState createState() => _DomesticSearchPageState();
 }
@@ -28,7 +31,15 @@ class _DomesticSearchPageState extends State<DomesticSearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: Text('주식 정보방검색')),
+        appBar: AppBar(
+          backgroundColor: Color.fromRGBO(240, 175, 142,100),
+          iconTheme: IconThemeData(color:Colors.black),
+          title: Text((() {
+          if (widget.category =='f'){
+            return '주식 토론방 검색';}
+          return '주식정보방 검색';
+        })(),style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),),
+        ),
         body: Column(
           children: [
             _SearchSection(),
@@ -119,7 +130,7 @@ class _DomesticSearchPageState extends State<DomesticSearchPage> {
         isLoading = true;
       });
 
-      var url = "http://13.125.62.90/api/v1/BlogPosts/?category=D&contentsearch=${searchController.text}&page=" +
+      var url = "http://13.125.62.90/api/v1/BlogPosts/?category=${widget.category}&contentsearch=${searchController.text}&page=" +
           (index + 1).toString();
 
       final response = await dio.get(url);
@@ -149,7 +160,7 @@ class _DomesticSearchPageState extends State<DomesticSearchPage> {
         isLoading = true;
       });
 
-      var url = "http://13.125.62.90/api/v1/BlogPosts/?category=D&titlesearch=${searchController.text}&page=" +
+      var url = "http://13.125.62.90/api/v1/BlogPosts/?category=${widget.category}&titlesearch=${searchController.text}&page=" +
           (index + 1).toString();
 
       final response = await dio.get(url);
@@ -180,7 +191,7 @@ class _DomesticSearchPageState extends State<DomesticSearchPage> {
         isLoading = true;
       });
 
-      var url = "http://13.125.62.90/api/v1/BlogPosts/?category=d&multisearch=${searchController.text}&page=" +
+      var url = "http://13.125.62.90/api/v1/BlogPostsList/?category=${widget.category}&multisearch=${searchController.text}&page=" +
           (index + 1).toString();
       print(url);
       final response = await dio.get(url);

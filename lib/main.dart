@@ -7,11 +7,13 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dropdown_alert/dropdown_alert.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:kakao_flutter_sdk/all.dart';
 
 import 'HomePage.dart';
 Future<void> _messageHandler(RemoteMessage message) async {
+  print('Handling a background message ${message.messageId}');
 
 }
 const Map<String, String> UNIT_ID = kReleaseMode
@@ -23,10 +25,12 @@ const Map<String, String> UNIT_ID = kReleaseMode
   'ios': 'ca-app-pub-3940256099942544/2934735716',
   'android': 'ca-app-pub-3940256099942544/6300978111',
 };
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  await MobileAds.instance.initialize();
+  KakaoContext.clientId = "96a3a0f35c7663fd62bf9870fd20e434";
+  KakaoContext.javascriptClientId = "60a803fedcf53b21f91dcd17a7cc39f9";
   FirebaseMessaging.onBackgroundMessage(_messageHandler);
   runApp(MyApp());
 }
@@ -63,7 +67,13 @@ class MyApp extends StatelessWidget {
         themeMode:  themeMode,
       navigatorObservers: <NavigatorObserver>[observer],
       home: HomePage(),
+      builder: (context, child) => Stack(
+        children: [
 
+          child!,
+          DropdownAlert(position: AlertPosition.BOTTOM,)
+        ],
+      ),
     );
   }
 }

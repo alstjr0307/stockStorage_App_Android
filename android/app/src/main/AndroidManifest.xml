@@ -3,6 +3,14 @@
    <application
         android:label="주식 기록장"
         android:icon="@mipmap/launcher_icon">
+       <activity android:name="com.kakao.sdk.flutter.AuthCodeCustomTabsActivity">
+           <intent-filter android:label="flutter_web_auth">
+               <action android:name="android.intent.action.VIEW" />
+               <category android:name="android.intent.category.DEFAULT" />
+               <category android:name="android.intent.category.BROWSABLE" />
+               <data android:scheme="kakaofb748431210dc9c7f46b48631a08d670" android:host="oauth"/>
+           </intent-filter>
+       </activity>
           <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
@@ -34,6 +42,7 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+
             </intent-filter>
             <intent-filter>
                 <action android:name="FLUTTER_NOTIFICATION_CLICK" />

@@ -86,6 +86,7 @@ class _TofuState extends State<Tofu> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          backgroundColor: Color.fromRGBO(240, 175, 142,100),
           automaticallyImplyLeading: false,
           backwardsCompatibility: false,
           toolbarHeight: 110,
@@ -98,7 +99,7 @@ class _TofuState extends State<Tofu> {
                   style: TextStyle(
                       fontFamily: 'Strong',
                       fontWeight: FontWeight.bold,
-                      color: FlexColor.materialLightBackground),
+                      color: Colors.black),
                 ),
               ),
               _DateSelect(),
@@ -114,8 +115,11 @@ class _TofuState extends State<Tofu> {
           ),
         ],
         ),
-        body: Column(
-          children: [_List()],
+        body: Container(
+          color: Color.fromRGBO(240, 175, 142,100),
+          child: Column(
+            children: [_List()],
+          ),
         ));
   }
 
@@ -285,13 +289,13 @@ class _TofuState extends State<Tofu> {
                             child: Text(
                               index.replaceRange(0, 8, '') + '일',
                               style: TextStyle(
-                                  color: Colors.black,
+                                  color: Colors.white,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold),
                             ),
                             decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: FlexColor.amberDarkPrimary),
+                                color: Color.fromRGBO(96, 97, 179, 1)),
                             padding: EdgeInsets.all(10),
                           ),
                         ),
@@ -309,7 +313,7 @@ class _TofuState extends State<Tofu> {
                                       child: Container(
                                         child: Card(
                                           color:
-                                          Color.fromRGBO(225, 248, 220, 10),
+                                          Color.fromRGBO(255,236,227,1),
                                           child: Padding(
                                             padding: const EdgeInsets.all(7.0),
                                             child: Column(

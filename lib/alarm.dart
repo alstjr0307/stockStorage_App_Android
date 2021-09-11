@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'HomePage.dart';
 class Alarm extends StatefulWidget {
@@ -14,7 +15,9 @@ class _AlarmState extends State<Alarm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('알림'),
+        title: Text('알림', style:TextStyle(color:Colors.black, fontWeight: FontWeight.bold, fontFamily: 'Strong')),
+        iconTheme: IconThemeData(color: Colors.black, size: 40),
+        backgroundColor: Color.fromRGBO(240, 175, 142, 100),
       ),
       body: _List(),
     );
@@ -25,9 +28,26 @@ class _AlarmState extends State<Alarm> {
       screenClassOverride: 'alarm',
     );
   } //앱
+  var sharedPreferences;
+  var username;
+  var token;
+  var comment = '없음';
+  checkLoginStatus() async {
+    sharedPreferences = await SharedPreferences.getInstance();
+    if (sharedPreferences.getString("token") != null) {
+      username = sharedPreferences.getString("nickname");
+      token = sharedPreferences.getString("token");
+      comment = sharedPreferences.getString("commentnoti");
+
+      setState(() {
+
+      });
+    }
+  }
   @override
   void initState() {
     super.initState();
+    checkLoginStatus();
     alarmlog();
   }
   Widget _List() {
@@ -51,24 +71,22 @@ class _AlarmState extends State<Alarm> {
           var index = data!.keys.toList();
           index.sort();
 
+          double c_width = MediaQuery.of(context).size.width*0.9;
 
           return ListView(
             children: [
-              for (var i in index.reversed) //i는 시간, data[i]는 map
-                Card(
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Card(
+                  elevation: 10,
                   child: Column(
                     children: [
-                      Row(
-                        children: [
-                          Icon(Icons.timer),
-                          Text(i, style: TextStyle(fontSize: 12)),
-                        ],
-                      ),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Row(
                           children: [
-                            Text(data[i]['title'], style: TextStyle(fontSize:17, fontFamily: 'Strong'),),
+                            Icon(Icons.comment, color: Colors.red,),
+                            Text('  새 댓글', style: TextStyle(fontSize: 14, color: Colors.red, fontWeight: FontWeight.bold)),
                           ],
                         ),
                       ),
@@ -76,12 +94,54 @@ class _AlarmState extends State<Alarm> {
                         padding: const EdgeInsets.all(8.0),
                         child: Row(
                           children: [
-                            Text(data[i]['content'].replaceAll("\\n", "\n")),
+                            Container(width:300,child: Text(comment, style: TextStyle(fontSize:17, fontFamily: 'Strong', ),overflow: TextOverflow.ellipsis,)),
                           ],
                         ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Container( width: c_width,child: Text(comment.replaceAll("\\n", "\n"), maxLines: 3)),
                       )
 
                     ],
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 20,),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  child:Text('공지사항', style: TextStyle(fontFamily: 'Strong', fontWeight: FontWeight.bold, fontSize: 20)),
+                ),
+              ),
+              for (var i in index.reversed) //i는 시간, data[i]는 map
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.timer),
+                            Text(i, style: TextStyle(fontSize: 12)),
+                          ],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            children: [
+                              Text(data[i]['title'], style: TextStyle(fontSize:17, fontFamily: 'Strong'),),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Container( width: c_width,child: Text(data[i]['content'].replaceAll("\\n", "\n"), maxLines: 3)),
+                        )
+
+                      ],
+                    ),
                   ),
                 )
             ],
