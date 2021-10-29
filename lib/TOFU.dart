@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:core';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:searchable_dropdown/searchable_dropdown.dart';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
 import 'package:month_picker_dialog/month_picker_dialog.dart';
+
+import 'HomePage.dart';
 
 class Tofu extends StatefulWidget {
   @override
@@ -46,10 +48,15 @@ class _TofuState extends State<Tofu> {
     });
     return items;
   }
-
+  Future tofulog() async {
+    await analytics.setCurrentScreen(
+      screenName: '추천주제공',
+    );
+  } //앱
   @override
   void initState() {
     super.initState();
+    tofulog();
     if (DateTime.now().toString().substring(5, 6) == '0') {
       monthController.text = DateTime.now().toString().substring(0, 4) +
           '년 ' +
@@ -79,6 +86,7 @@ class _TofuState extends State<Tofu> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          backgroundColor: Color.fromRGBO(240, 175, 142,100),
           automaticallyImplyLeading: false,
           backwardsCompatibility: false,
           toolbarHeight: 110,
@@ -91,7 +99,7 @@ class _TofuState extends State<Tofu> {
                   style: TextStyle(
                       fontFamily: 'Strong',
                       fontWeight: FontWeight.bold,
-                      color: FlexColor.materialLightBackground),
+                      color: Colors.black),
                 ),
               ),
               _DateSelect(),
@@ -104,11 +112,14 @@ class _TofuState extends State<Tofu> {
             onTap: () {
               Navigator.pop(context);
             },
-    ),
+          ),
         ],
         ),
-        body: Column(
-          children: [_List()],
+        body: Container(
+          color: Color.fromRGBO(240, 175, 142,100),
+          child: Column(
+            children: [_List()],
+          ),
         ));
   }
 
@@ -250,7 +261,7 @@ class _TofuState extends State<Tofu> {
             );
           }
           final data = snapshot.requireData.data();
-          var keyss = data!.keys
+          var keysss = data!.keys
               .where((k) =>
           k.substring(6, 7) == monthController.text.substring(6, 7) &&
               k.substring(0, 4) ==
@@ -258,7 +269,8 @@ class _TofuState extends State<Tofu> {
               k.substring(5, 7) == monthController.text.substring(6, 8) &&
                   k.substring(0, 4) == monthController.text.substring(0, 4))
               .toList();
-          keyss.sort();
+          keysss.sort();
+          var keyss = List.from(keysss.reversed);
           return Flexible(
             child: ListView(
               children: [
@@ -277,13 +289,13 @@ class _TofuState extends State<Tofu> {
                             child: Text(
                               index.replaceRange(0, 8, '') + '일',
                               style: TextStyle(
-                                  color: Colors.black,
+                                  color: Colors.white,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold),
                             ),
                             decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: FlexColor.amberDarkPrimary),
+                                color: Color.fromRGBO(96, 97, 179, 1)),
                             padding: EdgeInsets.all(10),
                           ),
                         ),
@@ -301,7 +313,7 @@ class _TofuState extends State<Tofu> {
                                       child: Container(
                                         child: Card(
                                           color:
-                                          Color.fromRGBO(225, 248, 220, 10),
+                                          Color.fromRGBO(255,236,227,1),
                                           child: Padding(
                                             padding: const EdgeInsets.all(7.0),
                                             child: Column(
@@ -334,39 +346,32 @@ class _TofuState extends State<Tofu> {
                                                   ),
                                                 ),
                                                 Row(
-                                                  mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceEvenly,
                                                   children: [
-                                                    Row(
-                                                      children: [
-                                                        Text('추천단가: '),
-                                                        Text(
-                                                          i['추천가'],
-                                                          style: TextStyle(
-                                                              fontFamily:
-                                                              'Strong',
-                                                              color: Colors.red,
-                                                              fontSize: 20),
-                                                        ),
-                                                      ],
+                                                    Text('추천단가: '),
+                                                    Text(
+                                                      i['추천가'],
+                                                      style: TextStyle(
+                                                          fontFamily:
+                                                          'Strong',
+                                                          color: Colors.red,
+                                                          fontSize: 20),
                                                     ),
-                                                    Row(
-                                                      children: [
-                                                        Text('목표가: '),
-                                                        Text(
-                                                          i['목표가'],
-                                                          style: TextStyle(
-                                                              fontFamily:
-                                                              'Strong',
-                                                              color: Colors.red,
-                                                              fontSize: 20),
-                                                        ),
-                                                      ],
-                                                    ),
-
                                                   ],
                                                 ),
+                                                Row(
+                                                  children: [
+                                                    Text('목표가: '),
+                                                    Text(
+                                                      i['목표가'],
+                                                      style: TextStyle(
+                                                          fontFamily:
+                                                          'Strong',
+                                                          color: Colors.red,
+                                                          fontSize: 20),
+                                                    ),
+                                                  ],
+                                                ),
+
                                                 Container(
                                                   child: Card(
                                                     elevation: 10,
@@ -376,7 +381,7 @@ class _TofuState extends State<Tofu> {
                                                       EdgeInsets.all(10),
                                                       child: Text(
                                                         i['이유'].replaceAll("\\n", "\n"),
-                                                        maxLines: 20,
+                                                        maxLines: 40,
                                                         overflow: TextOverflow
                                                             .ellipsis,
                                                       ),
