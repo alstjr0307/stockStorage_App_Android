@@ -32,13 +32,14 @@ class _AlarmState extends State<Alarm> {
   var username;
   var token;
   var comment = '없음';
+
   checkLoginStatus() async {
     sharedPreferences = await SharedPreferences.getInstance();
     if (sharedPreferences.getString("token") != null) {
       username = sharedPreferences.getString("nickname");
       token = sharedPreferences.getString("token");
       comment = sharedPreferences.getString("commentnoti");
-
+      print(comment);
       setState(() {
 
       });
@@ -47,7 +48,9 @@ class _AlarmState extends State<Alarm> {
   @override
   void initState() {
     super.initState();
+    comment = '없음';
     checkLoginStatus();
+
     alarmlog();
   }
   Widget _List() {
@@ -94,14 +97,29 @@ class _AlarmState extends State<Alarm> {
                         padding: const EdgeInsets.all(8.0),
                         child: Row(
                           children: [
-                            Container(width:300,child: Text(comment, style: TextStyle(fontSize:17, fontFamily: 'Strong', ),overflow: TextOverflow.ellipsis,)),
-                          ],
+                            if (comment != null)
+                            Container(width:300,child:
+
+                            Text(comment, style: TextStyle(fontSize:17, fontFamily: 'Strong', ),overflow: TextOverflow.ellipsis,)),
+                            if (comment ==null)
+                              Container(width:300,child:
+
+                              Text('없음', style: TextStyle(fontSize:17, fontFamily: 'Strong', ),overflow: TextOverflow.ellipsis,)),
+            ],
                         ),
                       ),
+                      if (comment != null)
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Container( width: c_width,child: Text(comment.replaceAll("\\n", "\n"), maxLines: 3)),
-                      )
+
+                      ),
+                      if (comment== null)
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Container( width: c_width,child: Text('새 댓글 없음', maxLines: 3)),
+
+                        ),
 
                     ],
                   ),

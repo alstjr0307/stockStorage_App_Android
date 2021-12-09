@@ -3,10 +3,12 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_dropdown_alert/alert_controller.dart';
+import 'package:flutter_dropdown_alert/dropdown_alert.dart';
 import 'package:flutter_dropdown_alert/model/data_alert.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'package:dio/dio.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:kakao_flutter_sdk/all.dart';
@@ -19,7 +21,9 @@ import 'dart:async';
 import 'Diary.dart';
 import 'Recommend.dart';
 import 'TOFU.dart';
+import 'TagPost.dart';
 import 'alarm.dart';
+import 'allDetail.dart';
 import 'domesticPost.dart';
 import 'kakaologin.dart';
 
@@ -102,18 +106,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   _loginWithKakao() async {
-
     try {
       var code = await AuthCodeClient.instance.request();
       await _issueAccessToken(code);
-
-    } catch (e) {
-
-    }
+    } catch (e) {}
   }
 
   _loginWithTalk() async {
-
     try {
       var code = await AuthCodeClient.instance.requestWithTalk();
       await _issueAccessToken(code);
@@ -144,7 +143,7 @@ class _HomePageState extends State<HomePage> {
             height: 500,
             child: DrawerHeader(
               decoration: BoxDecoration(
-                color: Color.fromRGBO(255, 210, 138, 1),
+                color: Color.fromRGBO(72, 149, 73, 0.6),
               ),
               child: Center(
                 child: Column(
@@ -235,7 +234,6 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         onPressed: () {
-
                           if (_isKakaoTalkInstalled)
                             _loginWithTalk();
                           else
@@ -257,8 +255,8 @@ class _HomePageState extends State<HomePage> {
                               decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      Color(0xff374ABE),
-                                      Color(0xff64B6FF)
+                                      Color.fromRGBO(0, 82, 33, 1),
+                                      Color.fromRGBO(185, 204, 179, 1)
                                     ],
                                     begin: Alignment.centerLeft,
                                     end: Alignment.centerRight,
@@ -269,7 +267,7 @@ class _HomePageState extends State<HomePage> {
                                     maxWidth: 250.0, minHeight: 50.0),
                                 alignment: Alignment.center,
                                 child: Text(
-                                  "내 프로필",
+                                  "프로필 더보기",
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                       color: Colors.white,
@@ -404,11 +402,9 @@ class _HomePageState extends State<HomePage> {
     _signInAnonymously();
     _initRewardedVideoAdListener();
     messaging = FirebaseMessaging.instance;
-    messaging.getToken().then((value) async{
+    messaging.getToken().then((value) async {
       sharedPreferences = await SharedPreferences.getInstance();
       sharedPreferences.setString("pushtoken", value);
-
-
     });
 
     FirebaseMessaging.onMessage.listen((event) {
@@ -432,58 +428,355 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     TargetPlatform os = Theme.of(context).platform;
-    if (flag == 1)
-      return Scaffold(
-        drawer: CustomDrawer(),
-        appBar: AppBar(
-          iconTheme: IconThemeData(color: Colors.black, size: 40),
-          backgroundColor: Color.fromRGBO(240, 175, 142, 100),
-          actions: [
-            IconButton(
+
+    Widget menu() {
+      return Card(
+        elevation: 10,
+        child: Container(
+          child: GridView.count(
+            crossAxisCount: 3,
+            childAspectRatio: 1,
+            controller: new ScrollController(keepScrollOffset: false),
+            shrinkWrap: true,
+            scrollDirection: Axis.vertical,
+            children: [
+              RawMaterialButton(
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => Alarm(),
+                      builder: (context) => Info(category: 'f'),
                     ),
                   );
                 },
-                icon: Image.asset("assets/images/bell.png"))
-          ],
-        ),
-        body: Container(
-          color: Color.fromRGBO(240, 175, 142, 100),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Title(),
-              toron(),
-              maemae(),
-              recommend(),
-              tofu(),
-              info(),
+                shape: CircleBorder(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(5.0),
+                      child: Container(
+                        child: Icon(
+                          Icons.chat,
+                          size: 40,
+                          color: Colors.white,
+                        ),
+                        height: 50.0,
+                        width: 50.0,
+                        color: Color.fromRGBO(166, 218, 149, 1),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Text(
+                      '토론방',
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
+                    )
+                  ],
+                ),
+              ),
+              RawMaterialButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Diary(),
+                    ),
+                  );
+                },
+                shape: CircleBorder(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(5.0),
+                      child: Container(
+                        child: Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Image.asset(
+                            'assets/images/post.png',
+                            color: Colors.white,
+                          ),
+                        ),
+                        height: 50.0,
+                        width: 50.0,
+                        color: Color.fromRGBO(166, 218, 149, 1),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Text(
+                      '매매일지',
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
+                    )
+                  ],
+                ),
+              ),
+              RawMaterialButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Recommend(),
+                    ),
+                  );
+                },
+                shape: CircleBorder(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(5.0),
+                      child: Container(
+                        child: Icon(
+                          Icons.bar_chart,
+                          color: Colors.white,
+                          size: 50,
+                        ),
+                        height: 50.0,
+                        width: 50.0,
+                        color: Color.fromRGBO(166, 218, 149, 1),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Text(
+                      '추천주 기록',
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
+                    )
+                  ],
+                ),
+              ),
+              RawMaterialButton(
+                onPressed: () {
+                  if (flag == 1) {
+                    _showRewardedAd();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Tofu(),
+                      ),
+                    );
+                  }
+                  else {
+                    AlertController.show(
+                      '로딩중입니다',
+                      '잠시만 기다려주십시오',
+                      TypeAlert.success,
+                    );
+                  }
+                },
+                shape: CircleBorder(),
+                child: Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(5.0),
+                      child: Container(
+                        child: Icon(
+                          Icons.star,
+                          color: Colors.yellow,
+                          size: 50,
+                        ),
+                        height: 50.0,
+                        width: 50.0,
+                        color: Color.fromRGBO(166, 218, 149, 1),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Text(
+                      '두부개미\n추천주',
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11),
+                      textAlign: TextAlign.center,
+                    )
+                  ],
+                ),
+              ),
+              RawMaterialButton(
+                onPressed: () {
+                  if (flag == 1) {
+                    _showInterstitialAd();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Info(category: 'd'),
+                      ),
+                    );
+                  }
+                  else {
+                    AlertController.show(
+                      '로딩중입니다',
+                      '잠시만 기다려주세요',
+                      TypeAlert.success,
+                    );
+                  }
+                },
+
+
+
+                shape: CircleBorder(),
+                child: Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(5.0),
+                      child: Container(
+                        child: Image.asset(
+                          'assets/images/news.png',
+                          color: Colors.white,
+
+                        ),
+                        height: 50.0,
+                        width: 50.0,
+                        color: Color.fromRGBO(166, 218, 149, 1),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Text(
+                      '주식\n정보글',
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11),
+                      textAlign: TextAlign.center,
+                    )
+                  ],
+                ),
+              ),
+              RawMaterialButton(
+                onPressed: () {
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Storage(),
+                    ),
+                  );
+
+
+                },
+                shape: CircleBorder(),
+                child: Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(5.0),
+                      child: Container(
+                        child: Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Icon(Icons.label, color: Colors.white, size: 30,
+                          ),
+                        ),
+                        height: 50.0,
+                        width: 50.0,
+                        color: Colors.red,
+                      ),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Text(
+                      '종목별로\n모아보기',
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11),
+                      textAlign: TextAlign.center,
+                    )
+                  ],
+                ),
+              )
             ],
           ),
         ),
       );
-    else
-      return Scaffold(
-        backgroundColor: Color.fromRGBO(240, 175, 142, 100),
-        body: Center(
-          child: Container(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 30),
-                Text(
-                  '로딩중입니다',
-                ),
-              ],
+    }
+
+    return Scaffold(
+        drawer: CustomDrawer(),
+        appBar: AppBar(
+          iconTheme: IconThemeData(color: Colors.white, size: 40),
+          backgroundColor: Color.fromRGBO(122, 154, 130, 1),
+          title: Text(
+            '주식 기록장',
+            style: TextStyle(
+              fontFamily: 'NanumGothic',
             ),
           ),
+          actions: [
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Alarm(),
+                  ),
+                );
+              },
+              icon: Image.asset(
+                "assets/images/bell.png",
+                color: Colors.white,
+              ),
+            )
+          ],
+        ),
+        body: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                    width: MediaQuery.of(context).size.width,
+                    height: 100,
+                    color: Color.fromRGBO(122, 154, 130, 1)),
+              ],
+            ),
+            Container(
+              child: ListView(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: menu(),
+                  ),
+                  FutureBuilder(
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        return PostAll(forList, context, '해외주식', Info(category:'f'));
+                      } else {
+                        return Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                    future: getPostAll(),
+                  ),
+
+                ],
+              ),
+            ),
+          ],
         ),
       );
+
   }
 
   Widget Title() {
@@ -498,213 +791,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget maemae() {
-    return Container(
-        height: 80,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Card(
-            color: Color.fromRGBO(255, 142, 122, 100),
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Diary(),
-                  ),
-                );
-              },
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Icon(
-                      Icons.calendar_today,
-                      color: Colors.white,
-                      size: 40,
-                    ),
-                  ),
-                  SizedBox(width: 20),
-                  Text(
-                    '매매일지',
-                    style: TextStyle(
-                        fontFamily: 'Strong',
-                        fontSize: 30,
-                        color: Colors.black),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ));
-  }
-
-  Widget recommend() {
-    return Container(
-        height: 80,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Card(
-            color: Color.fromRGBO(255, 142, 122, 100),
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Recommend(),
-                  ),
-                );
-              },
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Icon(
-                      Icons.stacked_line_chart,
-                      color: Colors.white,
-                      size: 40,
-                    ),
-                  ),
-                  SizedBox(width: 20),
-                  Text(
-                    '추천주 기록',
-                    style: TextStyle(
-                        fontFamily: 'Strong',
-                        fontSize: 30,
-                        color: Colors.black),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ));
-  }
-
-  Widget tofu() {
-    return Container(
-        height: 80,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Card(
-            color: Colors.black,
-            child: InkWell(
-              onTap: () {
-                _showRewardedAd();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Tofu(),
-                  ),
-                );
-              },
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Material(
-                      child: InkWell(
-                        child: Image.asset(
-                          "assets/images/unnamed.png",
-                          scale: 4,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 20),
-                  Text(
-                    '두부개미 추천주',
-                    style: TextStyle(
-                        fontFamily: 'Strong', fontSize: 30, color: Colors.red),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ));
-  }
-
-  Widget info() {
-    return Container(
-        height: 80,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Card(
-            color: Colors.black,
-            child: InkWell(
-              onTap: () {
-                _showInterstitialAd();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Info(category: 'd'),
-                  ),
-                );
-              },
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: InkWell(
-                        child: Icon(
-                      Icons.info_rounded,
-                      size: 30,
-                      color: Colors.white,
-                    )),
-                  ),
-                  SizedBox(width: 20),
-                  Text(
-                    '주식 정보글',
-                    style: TextStyle(
-                        fontFamily: 'Strong', fontSize: 30, color: Colors.red),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ));
-  }
-
-  Widget toron() {
-    return Container(
-        height: 80,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Card(
-            color: Color.fromRGBO(255, 142, 122, 100),
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Info(category: 'f'),
-                  ),
-                );
-              },
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: InkWell(
-                        child: Icon(
-                      Icons.chat,
-                      size: 40,
-                      color: Colors.white,
-                    )),
-                  ),
-                  SizedBox(width: 20),
-                  Text(
-                    '주식 토론방',
-                    style: TextStyle(
-                        fontFamily: 'Strong',
-                        fontSize: 30,
-                        color: Colors.black),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ));
-  }
 
   void _createInterstitialAd() {
     InterstitialAd.load(
@@ -744,7 +830,6 @@ class _HomePageState extends State<HomePage> {
     _interstitialAd!.show();
     _interstitialAd = null;
   }
-
 
   void _showRewardedAd() {
     if (_recommendAd == null) {
@@ -786,6 +871,135 @@ class _HomePageState extends State<HomePage> {
             _initRewardedVideoAdListener();
           }
         },
+      ),
+    );
+  }
+
+  var popularTag = [];
+  var forList = [];
+
+  Future<List> getPostAll() async {
+    popularTag = [];
+
+    var urlFor = "http://13.125.62.90/api/v1/BlogPostsList/?category=F";
+
+    var tag = "http://13.125.62.90/api/v1/TaggitTaggedItem/";
+
+    final responsetag = await dio.get(tag,
+        options: Options(
+          followRedirects: false,
+          validateStatus: (status) {
+            return status! < 500;
+          },
+        ));
+
+    final responsefor = await dio.get(urlFor,
+        options: Options(
+          followRedirects: false,
+          validateStatus: (status) {
+            return status! < 500;
+          },
+        ));
+
+    for (var i = 0; i < 10; i++) {
+      popularTag.add(responsetag.data[i]['name']);
+    }
+
+    final map = <String, int>{};
+    for (final letter in popularTag) {
+      map[letter] = map.containsKey(letter) ? map[letter]! + 1 : 1;
+    }
+
+    forList = responsefor.data['results'];
+
+    if (responsefor.statusCode == 200)
+      return forList;
+    else {
+      return Future.error(responsefor.statusCode.toString());
+    }
+  }
+
+  Widget PostAll(
+      List posts, BuildContext context, String title, Widget postlist) {
+    return Container(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '새로 올라온 글',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, fontFamily: 'NanumGothic'),
+                ),
+                TextButton(
+                    child: Row(
+                      children: [
+                        Text(
+                          '더보기', style: TextStyle(color:Colors.grey),
+                        ),
+                        Icon(
+                          Icons.arrow_right,
+                          color: Colors.grey,
+                        ),
+                      ],
+                    ),
+                    onPressed: () {
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (context) => postlist));
+                    })
+              ],
+            ),
+            padding: EdgeInsets.only(left: 10),
+          ),
+          Container(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Center(
+                child: Container(
+
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.lightGreenAccent,width: 2)
+                  ),
+                  child: Column(
+                    children: [
+                      for (var i = 0; i < 6; i++)
+                        Container(
+                          decoration: BoxDecoration(
+                            border:Border(
+                              bottom: BorderSide(width: 1.0, color: Colors.grey),
+                            ),
+                          ),
+                          child: ListTile(
+                            title: Text(posts[i]['title'],
+                                style: TextStyle(fontSize: 13)),
+                            subtitle: Text(
+                              posts[i]['writer'],
+                              style: TextStyle(fontSize: 10),
+                            ),
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => allDetail(
+                                            index: posts[i]['id'],
+                                          )));
+                            },
+                            dense: true,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(),
+        ],
       ),
     );
   }

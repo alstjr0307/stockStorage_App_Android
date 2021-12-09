@@ -15,7 +15,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 7.1+25
+version: 8.0+26
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
@@ -52,6 +52,7 @@ dependencies:
   flutter_native_splash: ^1.2.1
   html_editor_enhanced: ^2.0.0
   flutter_colorpicker: ^0.4.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -60,7 +61,7 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 flutter_native_splash:
   image: assets/images/title.png
-  color: "FFB996"
+  color: "03C04A"
 
 # The following section is specific to Flutter.
 flutter:
@@ -71,6 +72,8 @@ flutter:
     - assets/images/bell.png
     - assets/images/banner.png
     - assets/images/title.png
+    - assets/images/post.png
+    - assets/images/news.png
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
@@ -82,6 +85,12 @@ flutter:
     - family: Hanma
       fonts:
         - asset: assets/fonts/gyeongi.ttf
+    - family: Nanum
+      fonts:
+        - asset: assets/fonts/NanumGothic.ttf
+    - family: NanumGothic
+      fonts:
+        - asset: assets/fonts/NanumGothicBold.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:
