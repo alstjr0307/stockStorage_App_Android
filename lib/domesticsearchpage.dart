@@ -244,6 +244,7 @@ class _DomesticSearchPageState extends State<DomesticSearchPage> {
 
                 }
                 else {
+
                   return Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Container(

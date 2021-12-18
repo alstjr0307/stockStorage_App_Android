@@ -235,7 +235,7 @@ class _allDetailState extends State<allDetail>
         child: FutureBuilder(
           future: _future,
           builder: (context, snapshot) {
-            final restaurant = snapshot.data as Map;
+
             if (snapshot.hasError)
               return Scaffold(body: Center(child: Text('게시물이 존재하지 않습니다')));
             else if (!snapshot.hasData)
@@ -246,6 +246,7 @@ class _allDetailState extends State<allDetail>
                 )),
               );
             else {
+              final restaurant = snapshot.data as Map;
               if (likecount == null) likecount = restaurant['likes'];
               return Scaffold(
                 appBar: AppBar(
@@ -301,6 +302,68 @@ class _allDetailState extends State<allDetail>
                                       userID: restaurant['owner'],
                                       nickname: restaurant['writer'])));
                         }
+                        else if (result ==3) {
+                          await showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text('작성자 차단'),
+                                content: Text('해당 회원 게시물을 볼 수 없게 됩니다\n작성자를 차단하겠습니까?'),
+                                actions: [
+                                  FlatButton(
+                                    onPressed: () async {
+                                      Navigator.of(context).pop();
+                                      var blocklist =sharedPreferences.getStringList('blockid');
+                                      blocklist.add(restaurant['writer']);
+                                      sharedPreferences.setStringList('blockid', blocklist);
+                                      Navigator.pop(context);
+                                      Navigator.pushReplacement(context,
+                                          MaterialPageRoute(builder: (context) => HomePage()));
+                                      setState(() {
+
+                                      });
+                                    },
+                                    child: Text('예'),
+                                  ),
+                                  FlatButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text('아니오')),
+                                ],
+                              );
+                            },
+                          );
+                        }
+                        else if (result ==4) {
+                          await showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text('작성자 신고'),
+                                content: Text('해당 회원을 관리자에게 신고합니다\n작성자를 신고하시겠습니까?'),
+                                actions: [
+                                  FlatButton(
+                                    onPressed: () async {
+
+                                      Navigator.pop(context);
+
+                                      setState(() {
+
+                                      });
+                                    },
+                                    child: Text('예'),
+                                  ),
+                                  FlatButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text('아니오')),
+                                ],
+                              );
+                            },
+                          );
+                        }
                       },
                       itemBuilder: (context) => [
                         if (restaurant['id'] == restaurant['owner'])
@@ -322,10 +385,28 @@ class _allDetailState extends State<allDetail>
                                 fontWeight: FontWeight.w700),
                           ),
                         ),
+                        if(restaurant['id'] != restaurant['owner'])
+                          PopupMenuItem(
+                            value:3,
+                            child: Text("작성자 차단", style: TextStyle(color:Colors.red, fontWeight: FontWeight.w700)),
+                          ),
+                        if(restaurant['id'] != restaurant['owner'])
+                        PopupMenuItem(
+                          value: 4,
+                          child: Text(
+                            "작성자 신고",
+                            style: TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ),
+
+
                       ],
                       icon: Icon(Icons.menu, color: Colors.white),
                       offset: Offset(0, 20),
                     ),
+
                   ],
                 ),
                 body: Padding(

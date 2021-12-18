@@ -13,11 +13,13 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:kakao_flutter_sdk/all.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:kakao_flutter_sdk/auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stockdiary/Profile.dart';
 import 'package:stockdiary/changenickname.dart';
 import 'package:dio/dio.dart';
 import 'dart:async';
+import 'BlockedUser.dart';
 import 'Diary.dart';
 import 'Recommend.dart';
 import 'TOFU.dart';
@@ -49,9 +51,14 @@ class _HomePageState extends State<HomePage> {
   var username;
   var sharedPreferences;
   var userid;
-
+  var blockid;
   checkLoginStatus() async {
     sharedPreferences = await SharedPreferences.getInstance();
+
+    if (sharedPreferences.getStringList("blockid") == null) {
+      sharedPreferences.setStringList("blockid", [""]);
+    }
+    blockid = sharedPreferences.getStringList('blockid');
     if (sharedPreferences.getString("token") != null) {
       username = sharedPreferences.getString("nickname");
       token = sharedPreferences.getString("token");
@@ -94,7 +101,8 @@ class _HomePageState extends State<HomePage> {
   _issueAccessToken(String authCode) async {
     try {
       var token = await AuthApi.instance.issueAccessToken(authCode);
-      AccessTokenStore.instance.toStore(token);
+      print(token);
+      TokenManagerProvider.instance.manager.setToken(token);
       Navigator.push(
           context,
           MaterialPageRoute(
@@ -135,253 +143,298 @@ class _HomePageState extends State<HomePage> {
   Widget CustomDrawer() {
     return Drawer(
       // 리스트뷰 추가
-      child: ListView(
-        padding: EdgeInsets.zero,
+      child: Column(
+
         children: <Widget>[
           // 드로워해더 추가
-          Container(
-            height: 500,
-            child: DrawerHeader(
-              decoration: BoxDecoration(
-                color: Color.fromRGBO(72, 149, 73, 0.6),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (username == null)
-                      Row(
-                        children: [
-                          Text(
-                            '비회원',
-                            style: TextStyle(
-                                fontFamily: 'gyeongi',
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      )
-                    else
-                      Row(
-                        children: [
-                          Container(
-                            child: Text(
-                              username,
+          Expanded(
+            flex:6,
+            child: Container(
+              child: DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Color.fromRGBO(72, 149, 73, 0.6),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (username == null)
+                        Row(
+                          children: [
+                            Text(
+                              '비회원',
                               style: TextStyle(
                                   fontFamily: 'gyeongi',
-                                  fontSize: 20,
                                   fontWeight: FontWeight.bold),
                             ),
-                          ),
-                          SizedBox(
-                            width: 10,
-                          ),
-                          FutureBuilder(
-                            builder: (context, snapshot) {
-                              final restaurant = snapshot.data as Map;
-                              if (snapshot.hasData) {
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      ' | 게시물 ' + restaurant['post'].toString(),
-                                      style: TextStyle(
-                                          fontSize: 13, fontFamily: 'Strong'),
-                                    ),
-                                    SizedBox(height: 5),
-                                    Text(
-                                      ' | 댓글 ' +
-                                          restaurant['comment'].toString(),
-                                      style: TextStyle(
-                                          fontSize: 13, fontFamily: 'Strong'),
-                                    )
-                                  ],
-                                );
-                              } else {
-                                return CircularProgressIndicator(
-                                  color: Colors.red,
-                                );
-                              }
-                            },
-                            future: getProfile(),
-                          ),
-                        ],
-                      ),
-
-                    SizedBox(
-                      height: 20,
-                    ),
-                    if (username == null)
-                      TextButton(
-                        child: Container(
-                          padding: EdgeInsets.fromLTRB(3, 5, 3, 5),
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            shape: BoxShape.rectangle,
-                            border: Border.all(width: 1.0, color: Colors.white),
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(30.0)),
-                          ),
-                          child: Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Text(
-                              "로그인",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
+                          ],
+                        )
+                      else
+                        Row(
+                          children: [
+                            Container(
+                              child: Text(
+                                username,
+                                style: TextStyle(
+                                    fontFamily: 'gyeongi',
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold),
                               ),
                             ),
-                          ),
-                        ),
-                        onPressed: () {
-                          if (_isKakaoTalkInstalled)
-                            _loginWithTalk();
-                          else
-                            _loginWithKakao();
-                        },
-                      ),
-                    if (username != null)
-                      Column(
-                        children: [
-                          RaisedButton(
-                            onPressed: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => MyProfile()));
-                            },
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(80.0)),
-                            padding: EdgeInsets.all(0.0),
-                            child: Ink(
-                              decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Color.fromRGBO(0, 82, 33, 1),
-                                      Color.fromRGBO(185, 204, 179, 1)
+                            SizedBox(
+                              width: 10,
+                            ),
+                            FutureBuilder(
+                              builder: (context, snapshot) {
+
+                                if (snapshot.hasData) {
+                                  final restaurant = snapshot.data as Map;
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        ' | 게시물 ' + restaurant['post'].toString(),
+                                        style: TextStyle(
+                                            fontSize: 13, fontFamily: 'Strong'),
+                                      ),
+                                      SizedBox(height: 5),
+                                      Text(
+                                        ' | 댓글 ' +
+                                            restaurant['comment'].toString(),
+                                        style: TextStyle(
+                                            fontSize: 13, fontFamily: 'Strong'),
+                                      )
                                     ],
-                                    begin: Alignment.centerLeft,
-                                    end: Alignment.centerRight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(30.0)),
-                              child: Container(
-                                constraints: BoxConstraints(
-                                    maxWidth: 250.0, minHeight: 50.0),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  "프로필 더보기",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontFamily: 'Strong'),
+                                  );
+                                } else {
+                                  return CircularProgressIndicator(
+                                    color: Colors.red,
+                                  );
+                                }
+                              },
+                              future: getProfile(),
+                            ),
+                          ],
+                        ),
+
+                      SizedBox(
+                        height: 20,
+                      ),
+                      if (username == null)
+                        TextButton(
+                          child: Container(
+                            padding: EdgeInsets.fromLTRB(3, 5, 3, 5),
+                            decoration: BoxDecoration(
+                              color: Colors.black,
+                              shape: BoxShape.rectangle,
+                              border: Border.all(width: 1.0, color: Colors.white),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(30.0)),
+                            ),
+                            child: Align(
+                              alignment: Alignment.bottomCenter,
+                              child: Text(
+                                "로그인",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
                                 ),
                               ),
                             ),
                           ),
-                          SizedBox(
-                            height: 50,
-                          ),
-                          TextButton(
-                            style: TextButton.styleFrom(
+                          onPressed: () {
+                            if (_isKakaoTalkInstalled)
+                              _loginWithTalk();
+                            else
+                              _loginWithKakao();
+                          },
+                        ),
+                      if (username != null)
+                        Column(
+                          children: [
+                            RaisedButton(
+                              onPressed: () {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => MyProfile()));
+                              },
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(80.0)),
+                              padding: EdgeInsets.all(0.0),
+                              child: Ink(
+                                decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color.fromRGBO(0, 82, 33, 1),
+                                        Color.fromRGBO(185, 204, 179, 1)
+                                      ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(30.0)),
+                                child: Container(
+                                  constraints: BoxConstraints(
+                                      maxWidth: 250.0, minHeight: 50.0),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    "프로필 더보기",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontFamily: 'Strong'),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 50,
+                            ),
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: Size(50, 30),
+                                  alignment: Alignment.centerLeft),
+                              onPressed: () {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => ChangeNickname()));
+                              },
+                              child: Container(
+                                padding: EdgeInsets.fromLTRB(3, 5, 3, 5),
+                                decoration: BoxDecoration(
+                                  color: Colors.black,
+                                  shape: BoxShape.rectangle,
+                                  border:
+                                      Border.all(width: 1.0, color: Colors.white),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(30.0)),
+                                ),
+                                child: Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: Text(
+                                    "닉네임 변경",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              style: TextButton.styleFrom(
                                 padding: EdgeInsets.zero,
                                 minimumSize: Size(50, 30),
-                                alignment: Alignment.centerLeft),
-                            onPressed: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => ChangeNickname()));
-                            },
-                            child: Container(
-                              padding: EdgeInsets.fromLTRB(3, 5, 3, 5),
-                              decoration: BoxDecoration(
-                                color: Colors.black,
-                                shape: BoxShape.rectangle,
-                                border:
-                                    Border.all(width: 1.0, color: Colors.white),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(30.0)),
+                                alignment: Alignment.centerLeft,
                               ),
-                              child: Align(
-                                alignment: Alignment.bottomCenter,
-                                child: Text(
-                                  "닉네임 변경",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          TextButton(
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size(50, 30),
-                              alignment: Alignment.centerLeft,
-                            ),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (BuildContext context) {
-                                  return Dialog(
-                                    child: Container(
-                                      padding:
-                                          EdgeInsets.fromLTRB(10, 20, 10, 20),
-                                      child: new Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          new CircularProgressIndicator(),
-                                          SizedBox(
-                                            width: 20,
-                                          ),
-                                          new Text("로그아웃중"),
-                                        ],
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (BuildContext context) {
+                                    return Dialog(
+                                      child: Container(
+                                        padding:
+                                            EdgeInsets.fromLTRB(10, 20, 10, 20),
+                                        child: new Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            new CircularProgressIndicator(),
+                                            SizedBox(
+                                              width: 20,
+                                            ),
+                                            new Text("로그아웃중"),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                },
-                              );
-                              sharedPreferences.clear();
-                              sharedPreferences.commit();
-                              username = null;
+                                    );
+                                  },
+                                );
+                                sharedPreferences.clear();
+                                sharedPreferences.commit();
+                                username = null;
 
-                              new Future.delayed(new Duration(seconds: 1), () {
-                                //pop dialog
-                                setState(() {});
-                                Navigator.pop(context);
-                              });
-                            },
-                            child: Container(
-                              padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
-                              margin: EdgeInsets.all(0),
-                              decoration: BoxDecoration(
-                                color: FlexColor.redLightPrimary,
-                                shape: BoxShape.rectangle,
-                                border:
-                                    Border.all(width: 1.0, color: Colors.white),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(20.0)),
-                              ),
-                              child: Align(
-                                alignment: Alignment.bottomCenter,
-                                child: Text(
-                                  "로그아웃",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
+                                new Future.delayed(new Duration(seconds: 1), () {
+                                  //pop dialog
+                                  setState(() {});
+                                  Navigator.pop(context);
+                                });
+                              },
+                              child: Container(
+                                padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                                margin: EdgeInsets.all(0),
+                                decoration: BoxDecoration(
+                                  color: FlexColor.redLightPrimary,
+                                  shape: BoxShape.rectangle,
+                                  border:
+                                      Border.all(width: 1.0, color: Colors.white),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(20.0)),
+                                ),
+                                child: Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: Text(
+                                    "로그아웃",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
                                   ),
                                 ),
                               ),
+                            ),
+                          ],
+                        ),
+
+                      //프로필 가기
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 4,
+            child: Column(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => BlockedUser()));
+                  },
+                  child: Container(
+                    padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                    margin: EdgeInsets.all(0),
+                    decoration: BoxDecoration(
+                      color: FlexColor.redLightPrimary,
+                      shape: BoxShape.rectangle,
+                      border: Border.all(width: 1.0, color: Colors.white),
+                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                    ),
+                    child: Container(
+                      height: 20,
+                      width: 250,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.block, color: Colors.red),
+                          Text(
+                            "차단한 사용자 보러가기",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
                             ),
                           ),
                         ],
                       ),
-
-                    //프로필 가기
-                  ],
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
           // 리스트타일 추가
@@ -714,7 +767,7 @@ class _HomePageState extends State<HomePage> {
           iconTheme: IconThemeData(color: Colors.white, size: 40),
           backgroundColor: Color.fromRGBO(122, 154, 130, 1),
           title: Text(
-            '주식 기록장',
+            '주식저장소',
             style: TextStyle(
               fontFamily: 'NanumGothic',
             ),
@@ -733,7 +786,30 @@ class _HomePageState extends State<HomePage> {
                 "assets/images/bell.png",
                 color: Colors.white,
               ),
-            )
+            ),
+            IconButton(
+                icon: Icon(Icons.report),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('신고 및 문의사항'),
+                        content: Text('신고 및 문의사항이 있으실 경우 alswp26@gmail.com로 연락 주시면  빠르게 해결하도록 하겠습니다'),
+                        actions: [
+                          FlatButton(
+                            onPressed: () async {
+
+                              Navigator.pop(context);
+                            },
+                            child: Text('확인'),
+                          ),
+
+                        ],
+                      );
+                    },
+                  );
+                }),
           ],
         ),
         body: Stack(
@@ -968,6 +1044,7 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     children: [
                       for (var i = 0; i < 6; i++)
+                        if (blockid.contains(posts[i]['writer']) == false)
                         Container(
                           decoration: BoxDecoration(
                             border:Border(
@@ -992,6 +1069,7 @@ class _HomePageState extends State<HomePage> {
                             dense: true,
                           ),
                         ),
+
                     ],
                   ),
                 ),
