@@ -15,6 +15,8 @@ import 'package:back_button_interceptor/back_button_interceptor.dart';
 
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stockdiary/TagPost.dart';
+import 'package:stockdiary/TagPostList.dart';
 import 'package:stockdiary/writerpost.dart';
 
 import 'HomePage.dart';
@@ -233,7 +235,7 @@ class _allDetailState extends State<allDetail>
         child: FutureBuilder(
           future: _future,
           builder: (context, snapshot) {
-            final restaurant = snapshot.data as Map;
+
             if (snapshot.hasError)
               return Scaffold(body: Center(child: Text('게시물이 존재하지 않습니다')));
             else if (!snapshot.hasData)
@@ -244,14 +246,17 @@ class _allDetailState extends State<allDetail>
                 )),
               );
             else {
+              final restaurant = snapshot.data as Map;
               if (likecount == null) likecount = restaurant['likes'];
               return Scaffold(
                 appBar: AppBar(
-                  backgroundColor: Color.fromRGBO(240, 175, 142, 100),
-                  iconTheme: IconThemeData(color: Colors.black, size: 40),
+                  backgroundColor: Color.fromRGBO(122, 154, 130, 1),
+                  iconTheme: IconThemeData(
+                    color: Colors.white,
+                  ),
                   title: Text(
                     restaurant['title'],
-                    style: TextStyle(color: Colors.black),
+                    style: TextStyle(color: Colors.white),
                   ),
                   actions: [
                     PopupMenuButton<int>(
@@ -297,6 +302,68 @@ class _allDetailState extends State<allDetail>
                                       userID: restaurant['owner'],
                                       nickname: restaurant['writer'])));
                         }
+                        else if (result ==3) {
+                          await showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text('작성자 차단'),
+                                content: Text('해당 회원 게시물을 볼 수 없게 됩니다\n작성자를 차단하겠습니까?'),
+                                actions: [
+                                  FlatButton(
+                                    onPressed: () async {
+                                      Navigator.of(context).pop();
+                                      var blocklist =sharedPreferences.getStringList('blockid');
+                                      blocklist.add(restaurant['writer']);
+                                      sharedPreferences.setStringList('blockid', blocklist);
+                                      Navigator.pop(context);
+                                      Navigator.pushReplacement(context,
+                                          MaterialPageRoute(builder: (context) => HomePage()));
+                                      setState(() {
+
+                                      });
+                                    },
+                                    child: Text('예'),
+                                  ),
+                                  FlatButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text('아니오')),
+                                ],
+                              );
+                            },
+                          );
+                        }
+                        else if (result ==4) {
+                          await showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text('작성자 신고'),
+                                content: Text('해당 회원을 관리자에게 신고합니다\n작성자를 신고하시겠습니까?'),
+                                actions: [
+                                  FlatButton(
+                                    onPressed: () async {
+
+                                      Navigator.pop(context);
+
+                                      setState(() {
+
+                                      });
+                                    },
+                                    child: Text('예'),
+                                  ),
+                                  FlatButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text('아니오')),
+                                ],
+                              );
+                            },
+                          );
+                        }
                       },
                       itemBuilder: (context) => [
                         if (restaurant['id'] == restaurant['owner'])
@@ -318,10 +385,28 @@ class _allDetailState extends State<allDetail>
                                 fontWeight: FontWeight.w700),
                           ),
                         ),
+                        if(restaurant['id'] != restaurant['owner'])
+                          PopupMenuItem(
+                            value:3,
+                            child: Text("작성자 차단", style: TextStyle(color:Colors.red, fontWeight: FontWeight.w700)),
+                          ),
+                        if(restaurant['id'] != restaurant['owner'])
+                        PopupMenuItem(
+                          value: 4,
+                          child: Text(
+                            "작성자 신고",
+                            style: TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ),
+
+
                       ],
-                      icon: Icon(Icons.menu, color: Colors.black),
+                      icon: Icon(Icons.menu, color: Colors.white),
                       offset: Offset(0, 20),
                     ),
+
                   ],
                 ),
                 body: Padding(
@@ -415,137 +500,179 @@ class _allDetailState extends State<allDetail>
                                 ],
                               ),
                             ),
-                            Column(
-                              children: [
-                                contentText(restaurant['content']),
-                                Container(
-                                  child: Row(
-                                    children: [
-                                      SizedBox(
-                                        height: 50,
-                                        width: 5,
+                            SizedBox(height: 20,),
+                            contentText(restaurant['content']),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  if (restaurant['taggittaggeditem_set']
+                                      .toString() !=
+                                      '[]')
+                                    Container(
+                                      padding: EdgeInsets.all(5),
+                                      margin:
+                                      EdgeInsets.fromLTRB(0, 0, 3, 0),
+                                      decoration: BoxDecoration(
+                                          color: Colors.blueAccent,
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(10))),
+                                      child: Text(
+                                        '연관 종목',
+                                        style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white),
                                       ),
-                                      Icon(Icons.comment, color: Colors.red),
-                                      Text(
-                                        '댓글',
-                                        style: TextStyle(color: Colors.red),
+                                    ),
+                                  for (Map i in restaurant['taggittaggeditem_set'])
+                                    Container(
+                                      child: TextButton(
+                                        child: Text(
+                                          i['name'] + '  ',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.blue),
+                                        ),
+                                        onPressed: () {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) => StoragePost(tag: i['name'])));
+                                        },
                                       ),
-                                      Text(
-                                        '(${restaurant['comment'].toString()})',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ],
+                                    ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    height: 50,
+                                    width: 5,
                                   ),
-                                ),
-                                for (var i in restaurant[
-                                    'blogpostcomment_set']) //댓글리스트
-                                  Container(
-                                    padding: EdgeInsets.fromLTRB(3, 10, 3, 10),
-                                    decoration: BoxDecoration(
-                                        border: Border(
-                                            bottom: BorderSide(width: 0.1))),
-                                    child: Column(
+                                  Icon(Icons.comment, color: Colors.red),
+                                  Text(
+                                    '댓글',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                  Text(
+                                    '(${restaurant['comment'].toString()})',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            for (var i in restaurant[
+                                'blogpostcomment_set']) //댓글리스트
+                              Container(
+                                padding: EdgeInsets.fromLTRB(3, 10, 3, 10),
+                                decoration: BoxDecoration(
+                                    border: Border(
+                                        bottom: BorderSide(width: 0.1))),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Row(children: [
-                                              if (i['user'] == '두부개미')
-                                                Icon(Icons.star),
-                                              Text(
-                                                i['user'],
-                                                style: TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.w800),
-                                              ),
-                                            ]),
-                                            Row(
-                                              children: [
-                                                if (i['writer'] ==
-                                                    restaurant['id'])
-                                                  IconButton(
-                                                      padding: EdgeInsets.zero,
-                                                      constraints:
-                                                          BoxConstraints(),
-                                                      //댓글삭제버튼
-                                                      icon: Icon(
-                                                        Icons.delete_sharp,
-                                                        size: 19,
-                                                      ),
-                                                      onPressed: () async {
-                                                        await showDialog(
-                                                            context: context,
-                                                            builder:
-                                                                (BuildContext
-                                                                    context) {
-                                                              return AlertDialog(
-                                                                title:
-                                                                    Text('삭제'),
-                                                                content: Text(
-                                                                    '댓글을 삭제하시겠습니까?'),
-                                                                actions: [
-                                                                  FlatButton(
-                                                                    onPressed:
-                                                                        () async {
-                                                                      var response =
-                                                                          await http
-                                                                              .delete(
-                                                                        Uri.http(
-                                                                            '13.125.62.90',
-                                                                            'api/v1/BlogPostcomment/${i['id']}/'),
-                                                                        headers: {
-                                                                          "Authorization":
-                                                                              "Token ${restaurant['token']}",
-                                                                          "Content-Type":
-                                                                              "application/json"
-                                                                        },
-                                                                      );
-                                                                      setState(
-                                                                          () {
-                                                                        _future = getPostData(
-                                                                            widget.index,
-                                                                            content);
-                                                                      });
-                                                                      Navigator.of(
-                                                                              context)
-                                                                          .pop();
-                                                                    },
-                                                                    child: Text(
-                                                                        '예'),
-                                                                  ),
-                                                                  FlatButton(
-                                                                      onPressed:
-                                                                          () {
-                                                                        Navigator.of(context)
-                                                                            .pop();
-                                                                      },
-                                                                      child: Text(
-                                                                          '아니오')),
-                                                                ],
-                                                              );
-                                                            });
-                                                      }),
-                                                Text(i!['time'],
-                                                    style: TextStyle(
-                                                        color: Colors.grey,
-                                                        fontSize: 10)),
-                                              ],
-                                            )
-                                          ],
-                                        ),
-                                        SizedBox(height: 10),
-                                        Container(
-                                          alignment: Alignment.centerLeft,
-                                          child: Text(
-                                            i['content'],
+                                        Row(children: [
+                                          if (i['user'] == '두부개미')
+                                            Icon(Icons.star),
+                                          Text(
+                                            i['user'],
+                                            style: TextStyle(
+
+                                                fontWeight:
+                                                    FontWeight.bold, fontFamily: 'Strong'),
                                           ),
-                                        ),
+                                        ]),
+                                        Row(
+                                          children: [
+                                            if (i['writer'] ==
+                                                restaurant['id'])
+                                              IconButton(
+                                                  padding: EdgeInsets.zero,
+                                                  constraints:
+                                                      BoxConstraints(),
+                                                  //댓글삭제버튼
+                                                  icon: Icon(
+                                                    Icons.delete_sharp,
+                                                    size: 19,
+                                                  ),
+                                                  onPressed: () async {
+                                                    await showDialog(
+                                                        context: context,
+                                                        builder:
+                                                            (BuildContext
+                                                                context) {
+                                                          return AlertDialog(
+                                                            title:
+                                                                Text('삭제'),
+                                                            content: Text(
+                                                                '댓글을 삭제하시겠습니까?'),
+                                                            actions: [
+                                                              FlatButton(
+                                                                onPressed:
+                                                                    () async {
+                                                                  var response =
+                                                                      await http
+                                                                          .delete(
+                                                                    Uri.http(
+                                                                        '13.125.62.90',
+                                                                        'api/v1/BlogPostcomment/${i['id']}/'),
+                                                                    headers: {
+                                                                      "Authorization":
+                                                                          "Token ${restaurant['token']}",
+                                                                      "Content-Type":
+                                                                          "application/json"
+                                                                    },
+                                                                  );
+                                                                  setState(
+                                                                      () {
+                                                                    _future = getPostData(
+                                                                        widget.index,
+                                                                        content);
+                                                                  });
+                                                                  Navigator.of(
+                                                                          context)
+                                                                      .pop();
+                                                                },
+                                                                child: Text(
+                                                                    '예'),
+                                                              ),
+                                                              FlatButton(
+                                                                  onPressed:
+                                                                      () {
+                                                                    Navigator.of(context)
+                                                                        .pop();
+                                                                  },
+                                                                  child: Text(
+                                                                      '아니오')),
+                                                            ],
+                                                          );
+                                                        });
+                                                  }),
+                                            Text(i!['time'],
+                                                style: TextStyle(
+                                                    color: Colors.grey,
+                                                    fontSize: 10)),
+                                          ],
+                                        )
                                       ],
                                     ),
-                                  ),
-                              ],
-                            )
+                                    SizedBox(height: 10),
+                                    Container(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        i['content'],
+                                      ),
+                                    ),
+
+                                  ],
+                                ),
+                              )
                           ],
                         ),
                       ),
@@ -622,6 +749,7 @@ class _allDetailState extends State<allDetail>
       }
       postowner = content['owner'];
       pushtoken = content['pushtoken'];
+      print(content['taggittaggeditem_set']);
       return content;
     } else {
       // 만약 응답이 OK가 아니면, 에러를 던집니다.
@@ -670,22 +798,19 @@ class _allDetailState extends State<allDetail>
   }
 
   Widget contentText(String content) {
-    return SingleChildScrollView(
-      child: Container(
-        decoration: BoxDecoration(
-            border: Border(
-                bottom: BorderSide(
-                    color: Colors.black26,
-                    width: 1,
-                    style: BorderStyle.solid))),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(4, 10, 4, 20),
-          child: HtmlWidget(
-            content,
-          ),
+    return Container(
+      decoration: BoxDecoration(
+          border: Border(
+              bottom: BorderSide(
+                  color: Colors.black26,
+                  width: 1,
+                  style: BorderStyle.solid))),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(4, 10, 4, 20),
+        child: HtmlWidget(
+          content,
         ),
       ),
-      scrollDirection: Axis.vertical,
     );
   }
 

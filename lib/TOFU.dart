@@ -12,7 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
 import 'package:month_picker_dialog/month_picker_dialog.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 import 'HomePage.dart';
 
 class Tofu extends StatefulWidget {
@@ -24,16 +25,20 @@ class _TofuState extends State<Tofu> {
   final _formKey = GlobalKey<FormState>();
   bool asTabs = false;
   late String selectedValue;
-
+  var sharedPreferences;
   final List<DropdownMenuItem> items = [];
   var selectedItems;
   String result = '';
   FirebaseFirestore firestore = FirebaseFirestore.instance;
-
+  final stockController = TextEditingController();
+  final priceController = TextEditingController();
+  final targetController = TextEditingController();
+  final whyController = TextEditingController();
   final monthController = TextEditingController();
-
+  final dateController = TextEditingController();
   FirebaseAuth _auth = FirebaseAuth.instance;
   var json;
+  var nickname;
 
   Future<List> _loadFromAsset() async {
     final String data = await rootBundle.loadString("assets/KStock.json");
@@ -48,11 +53,17 @@ class _TofuState extends State<Tofu> {
     });
     return items;
   }
+
   Future tofulog() async {
+    sharedPreferences = await SharedPreferences.getInstance();
+
+    nickname = sharedPreferences.getString("nickname");
+    setState(() {});
     await analytics.setCurrentScreen(
       screenName: '추천주제공',
     );
   } //앱
+
   @override
   void initState() {
     super.initState();
@@ -74,22 +85,164 @@ class _TofuState extends State<Tofu> {
 
   @override
   void dispose() {
-
     monthController.dispose();
 
     super.dispose();
   }
 
+  AlertDialog alert = AlertDialog(
+    title: Text("기록 중입니다"),
+    content: Text("잠시만 기다려주세요 "),
+  );
 
+  Widget InputWidget() {
+    return SingleChildScrollView(
+        child: StatefulBuilder(builder: (context, setState) {
+      return Column(
+        children: [
+          TextField(
+            controller: dateController,
+            decoration: InputDecoration(
+              hintText: '날짜',
+              contentPadding:
+                  const EdgeInsets.only(left: 14.0, bottom: 1.0, top: 1.0),
+            ),
+          ),
+          TextField(
+            controller: stockController,
+            decoration: InputDecoration(
+              hintText: '종목',
+              contentPadding:
+                  const EdgeInsets.only(left: 14.0, bottom: 1.0, top: 1.0),
+            ),
+          ),
+          TextField(
+            controller: priceController,
+            decoration: InputDecoration(
+              hintText: '추천가',
+              contentPadding:
+                  const EdgeInsets.only(left: 14.0, bottom: 1.0, top: 1.0),
+            ),
+          ),
+          TextField(
+            decoration: InputDecoration(
+              hintText: '목표가',
+              contentPadding:
+                  const EdgeInsets.only(left: 14.0, bottom: 1.0, top: 1.0),
+            ),
+            controller: targetController,
+          ),
+          TextField(
+            keyboardType: TextInputType.multiline,
+            maxLines: null,
+            controller: whyController,
+            decoration: InputDecoration(
+              hintText: '매수/매도 이유',
+              contentPadding:
+                  const EdgeInsets.only(left: 14.0, bottom: 1.0, top: 1.0),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              child: new TextButton(
+                autofocus: false,
+                onPressed: () async {
+                  if (priceController.text.isNotEmpty&&dateController.text.isNotEmpty&&targetController.text.isNotEmpty&&stockController.text.isNotEmpty) {
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return alert;
+                        });
+
+                    var date = dateController.text;
+
+                    var set = [];
+                    var why = whyController.text;
+                    if (whyController.text == "") {
+                      why = "생략";
+                    }
+
+                    var newset = {
+                      "종목": stockController.text,
+                      "추천가": priceController.text,
+                      "이유": why,
+                      "목표가": targetController.text
+                    };
+                    await firestore
+                        .collection('0re')
+                        .doc('추천주')
+                        .get()
+                        .then((DocumentSnapshot ds) {
+                      try {
+                        set = ds[date];
+                      } catch (e) {}
+                    });
+
+                    set.insert(0, newset);
+                    await firestore
+                        .collection('0re')
+                        .doc('추천주')
+                        .update({date: set});
+
+                    targetController.clear();
+                    stockController.clear();
+                    priceController.clear();
+                    whyController.clear();
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                  } else {
+                    Navigator.pop(context);
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text('내용이 비어있습니다'),
+                            content: Text('값을 입력해주세요'),
+                            actions: [
+                              FlatButton(
+                                  onPressed: () {
+                                    Navigator.pop(context, "ok");
+
+                                    showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            content: Stack(
+                                              overflow: Overflow.visible,
+                                              children: <Widget>[InputWidget()],
+                                            ),
+                                          );
+                                        });
+                                  },
+                                  child: Text('확인'))
+                            ],
+                          );
+                        });
+                  }
+                },
+                style: TextButton.styleFrom(
+                    primary: Colors.white, backgroundColor: Colors.red),
+                child: Text('입력'),
+              ),
+            ),
+          ),
+        ],
+      );
+    }));
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          backgroundColor: Color.fromRGBO(240, 175, 142,100),
           automaticallyImplyLeading: false,
           backwardsCompatibility: false,
           toolbarHeight: 110,
+          backgroundColor: Color.fromRGBO(122, 154, 130, 1),
+          iconTheme: IconThemeData(
+            color: Colors.white,
+          ),
           title: Column(
             children: [
               Padding(
@@ -97,26 +250,48 @@ class _TofuState extends State<Tofu> {
                 child: Text(
                   '두부개미 추천주',
                   style: TextStyle(
-                      fontFamily: 'Strong',
                       fontWeight: FontWeight.bold,
-                      color: Colors.black),
+                      fontSize: 16,
+                      color: Colors.white),
                 ),
               ),
               _DateSelect(),
             ],
           ),
         ),
-        floatingActionButton: SpeedDial(child: Icon(Icons.list), children: [
-          SpeedDialChild(
-            child: Icon(Icons.home),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-        ],
+        floatingActionButton: SpeedDial(
+          child: Icon(Icons.list),
+          children: [
+            SpeedDialChild(
+              child: Icon(Icons.home),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            if (sharedPreferences.getString("nickname") == '두부개미')
+              SpeedDialChild(
+                child: Icon(Icons.add),
+                onTap: () {
+                  showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return StatefulBuilder(builder: (context, setState) {
+                          return AlertDialog(
+                            content: Stack(
+                              overflow: Overflow.visible,
+                              children: <Widget>[
+                                InputWidget(),
+                              ],
+                            ),
+                          );
+                        });
+                      });
+                },
+              ),
+          ],
         ),
         body: Container(
-          color: Color.fromRGBO(240, 175, 142,100),
+          color: Colors.white,
           child: Column(
             children: [_List()],
           ),
@@ -167,7 +342,7 @@ class _TofuState extends State<Tofu> {
                   fillColor: FlexColor.lightSurface,
                   hintText: '월 선택',
                   contentPadding:
-                  const EdgeInsets.only(left: 14.0, bottom: 1.0, top: 1.0),
+                      const EdgeInsets.only(left: 14.0, bottom: 1.0, top: 1.0),
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.white),
                     borderRadius: BorderRadius.circular(25.7),
@@ -239,15 +414,10 @@ class _TofuState extends State<Tofu> {
     );
   }
 
-
-
-
   Widget _List() {
     return new StreamBuilder(
-        stream: FirebaseFirestore.instance
-            .collection('0re')
-            .doc('추천주')
-            .snapshots(),
+        stream:
+            FirebaseFirestore.instance.collection('0re').doc('추천주').snapshots(),
         builder: (BuildContext context,
             AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> snapshot) {
           if (snapshot.hasError) {
@@ -261,13 +431,17 @@ class _TofuState extends State<Tofu> {
             );
           }
           final data = snapshot.requireData.data();
+
           var keysss = data!.keys
               .where((k) =>
-          k.substring(6, 7) == monthController.text.substring(6, 7) &&
-              k.substring(0, 4) ==
-                  monthController.text.substring(0, 4) ||
-              k.substring(5, 7) == monthController.text.substring(6, 8) &&
-                  k.substring(0, 4) == monthController.text.substring(0, 4))
+                  (monthController.text.length == 8 &&
+                      k.substring(6, 7) ==
+                          monthController.text.substring(6, 7) &&
+                      k.substring(0, 4) ==
+                          monthController.text.substring(0, 4)) ||
+                  (k.substring(5, 7) == monthController.text.substring(6, 8) &&
+                      k.substring(0, 4) ==
+                          monthController.text.substring(0, 4)))
               .toList();
           keysss.sort();
           var keyss = List.from(keysss.reversed);
@@ -294,8 +468,9 @@ class _TofuState extends State<Tofu> {
                                   fontWeight: FontWeight.bold),
                             ),
                             decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Color.fromRGBO(96, 97, 179, 1)),
+                              shape: BoxShape.circle,
+                              color: Color.fromRGBO(0, 82, 33, 1),
+                            ),
                             padding: EdgeInsets.all(10),
                           ),
                         ),
@@ -307,26 +482,26 @@ class _TofuState extends State<Tofu> {
                                 for (var i in data[index])
                                   Padding(
                                     padding:
-                                    const EdgeInsets.fromLTRB(0, 0, 0, 10),
+                                        const EdgeInsets.fromLTRB(0, 0, 0, 10),
                                     child: Padding(
                                       padding: const EdgeInsets.all(6.0),
                                       child: Container(
                                         child: Card(
                                           color:
-                                          Color.fromRGBO(255,236,227,1),
+                                              Color.fromRGBO(255, 236, 227, 1),
                                           child: Padding(
                                             padding: const EdgeInsets.all(7.0),
                                             child: Column(
                                               children: [
                                                 Padding(
                                                   padding:
-                                                  const EdgeInsets.fromLTRB(
-                                                      0, 0, 0, 8),
+                                                      const EdgeInsets.fromLTRB(
+                                                          0, 0, 0, 8),
                                                   child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceEvenly,
                                                     children: [
-
-
                                                       Row(
                                                         children: [
                                                           Text('종목: '),
@@ -334,14 +509,13 @@ class _TofuState extends State<Tofu> {
                                                             i['종목'],
                                                             style: TextStyle(
                                                                 fontFamily:
-                                                                'Strong',
-                                                                color: Colors.black,
+                                                                    'Strong',
+                                                                color: Colors
+                                                                    .black,
                                                                 fontSize: 20),
                                                           )
                                                         ],
                                                       ),
-
-
                                                     ],
                                                   ),
                                                 ),
@@ -351,8 +525,7 @@ class _TofuState extends State<Tofu> {
                                                     Text(
                                                       i['추천가'],
                                                       style: TextStyle(
-                                                          fontFamily:
-                                                          'Strong',
+                                                          fontFamily: 'Strong',
                                                           color: Colors.red,
                                                           fontSize: 20),
                                                     ),
@@ -364,26 +537,29 @@ class _TofuState extends State<Tofu> {
                                                     Text(
                                                       i['목표가'],
                                                       style: TextStyle(
-                                                          fontFamily:
-                                                          'Strong',
+                                                          fontFamily: 'Strong',
                                                           color: Colors.red,
                                                           fontSize: 20),
                                                     ),
                                                   ],
                                                 ),
-
                                                 Container(
                                                   child: Card(
                                                     elevation: 10,
                                                     child: Container(
                                                       width: 500,
                                                       padding:
-                                                      EdgeInsets.all(10),
+                                                          EdgeInsets.all(10),
                                                       child: Text(
-                                                        i['이유'].replaceAll("\\n", "\n"),
+                                                        i['이유'].replaceAll(
+                                                            "\\n", "\n"),
                                                         maxLines: 40,
                                                         overflow: TextOverflow
                                                             .ellipsis,
+                                                        style: TextStyle(
+                                                            fontSize: 13,
+                                                            fontFamily:
+                                                                'Nanum'),
                                                       ),
                                                       color: Color(0xffFFFFA5),
                                                     ),
@@ -409,9 +585,9 @@ class _TofuState extends State<Tofu> {
                     decoration: BoxDecoration(
                         border: Border(
                             bottom: BorderSide(
-                              color: Colors.black,
-                              width: 3,
-                            ))),
+                      color: Colors.grey,
+                      width: 2,
+                    ))),
                   ),
               ],
             ),

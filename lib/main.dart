@@ -62,14 +62,14 @@ class MyApp extends StatelessWidget {
 
         scheme: usedFlexScheme,
         visualDensity: FlexColorScheme.comfortablePlatformDensity,
-        fontFamily: 'Hanma'
+        fontFamily: 'hind',
+
       ).toTheme,
         themeMode:  themeMode,
       navigatorObservers: <NavigatorObserver>[observer],
       home: HomePage(),
       builder: (context, child) => Stack(
         children: [
-
           child!,
           DropdownAlert(position: AlertPosition.BOTTOM,)
         ],

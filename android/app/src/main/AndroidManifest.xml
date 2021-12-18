@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="www.stockstorage.stockdiary">
    <application
-        android:label="주식 기록장"
+        android:label="주식 저장소"
         android:icon="@mipmap/launcher_icon">
        <activity android:name="com.kakao.sdk.flutter.AuthCodeCustomTabsActivity">
            <intent-filter android:label="flutter_web_auth">
