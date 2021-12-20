@@ -52,6 +52,7 @@ class _HomePageState extends State<HomePage> {
   var sharedPreferences;
   var userid;
   var blockid;
+
   checkLoginStatus() async {
     sharedPreferences = await SharedPreferences.getInstance();
 
@@ -144,11 +145,10 @@ class _HomePageState extends State<HomePage> {
     return Drawer(
       // 리스트뷰 추가
       child: Column(
-
         children: <Widget>[
           // 드로워해더 추가
           Expanded(
-            flex:6,
+            flex: 6,
             child: Container(
               child: DrawerHeader(
                 decoration: BoxDecoration(
@@ -186,14 +186,15 @@ class _HomePageState extends State<HomePage> {
                             ),
                             FutureBuilder(
                               builder: (context, snapshot) {
-
                                 if (snapshot.hasData) {
                                   final restaurant = snapshot.data as Map;
                                   return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        ' | 게시물 ' + restaurant['post'].toString(),
+                                        ' | 게시물 ' +
+                                            restaurant['post'].toString(),
                                         style: TextStyle(
                                             fontSize: 13, fontFamily: 'Strong'),
                                       ),
@@ -227,7 +228,8 @@ class _HomePageState extends State<HomePage> {
                             decoration: BoxDecoration(
                               color: Colors.black,
                               shape: BoxShape.rectangle,
-                              border: Border.all(width: 1.0, color: Colors.white),
+                              border:
+                                  Border.all(width: 1.0, color: Colors.white),
                               borderRadius:
                                   BorderRadius.all(Radius.circular(30.0)),
                             ),
@@ -304,8 +306,8 @@ class _HomePageState extends State<HomePage> {
                                 decoration: BoxDecoration(
                                   color: Colors.black,
                                   shape: BoxShape.rectangle,
-                                  border:
-                                      Border.all(width: 1.0, color: Colors.white),
+                                  border: Border.all(
+                                      width: 1.0, color: Colors.white),
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(30.0)),
                                 ),
@@ -355,7 +357,8 @@ class _HomePageState extends State<HomePage> {
                                 sharedPreferences.commit();
                                 username = null;
 
-                                new Future.delayed(new Duration(seconds: 1), () {
+                                new Future.delayed(new Duration(seconds: 1),
+                                    () {
                                   //pop dialog
                                   setState(() {});
                                   Navigator.pop(context);
@@ -367,8 +370,8 @@ class _HomePageState extends State<HomePage> {
                                 decoration: BoxDecoration(
                                   color: FlexColor.redLightPrimary,
                                   shape: BoxShape.rectangle,
-                                  border:
-                                      Border.all(width: 1.0, color: Colors.white),
+                                  border: Border.all(
+                                      width: 1.0, color: Colors.white),
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(20.0)),
                                 ),
@@ -622,8 +625,7 @@ class _HomePageState extends State<HomePage> {
                         builder: (context) => Tofu(),
                       ),
                     );
-                  }
-                  else {
+                  } else {
                     AlertController.show(
                       '로딩중입니다',
                       '잠시만 기다려주십시오',
@@ -671,8 +673,7 @@ class _HomePageState extends State<HomePage> {
                         builder: (context) => Info(category: 'd'),
                       ),
                     );
-                  }
-                  else {
+                  } else {
                     AlertController.show(
                       '로딩중입니다',
                       '잠시만 기다려주세요',
@@ -680,9 +681,6 @@ class _HomePageState extends State<HomePage> {
                     );
                   }
                 },
-
-
-
                 shape: CircleBorder(),
                 child: Column(
                   children: [
@@ -692,7 +690,6 @@ class _HomePageState extends State<HomePage> {
                         child: Image.asset(
                           'assets/images/news.png',
                           color: Colors.white,
-
                         ),
                         height: 50.0,
                         width: 50.0,
@@ -715,15 +712,12 @@ class _HomePageState extends State<HomePage> {
               ),
               RawMaterialButton(
                 onPressed: () {
-
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => Storage(),
                     ),
                   );
-
-
                 },
                 shape: CircleBorder(),
                 child: Column(
@@ -733,7 +727,10 @@ class _HomePageState extends State<HomePage> {
                       child: Container(
                         child: Padding(
                           padding: const EdgeInsets.all(4.0),
-                          child: Icon(Icons.label, color: Colors.white, size: 30,
+                          child: Icon(
+                            Icons.label,
+                            color: Colors.white,
+                            size: 30,
                           ),
                         ),
                         height: 50.0,
@@ -762,97 +759,82 @@ class _HomePageState extends State<HomePage> {
     }
 
     return Scaffold(
-        drawer: CustomDrawer(),
-        appBar: AppBar(
-          iconTheme: IconThemeData(color: Colors.white, size: 40),
-          backgroundColor: Color.fromRGBO(122, 154, 130, 1),
-          title: Text(
-            '주식저장소',
-            style: TextStyle(
-              fontFamily: 'NanumGothic',
+      drawer: CustomDrawer(),
+      appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.white, size: 40),
+        backgroundColor: Color.fromRGBO(122, 154, 130, 1),
+        title: Text(
+          '주식저장소',
+          style: TextStyle(
+            fontFamily: 'NanumGothic',
+          ),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Alarm(),
+                ),
+              );
+            },
+            icon: Image.asset(
+              "assets/images/bell.png",
+              color: Colors.white,
             ),
           ),
-          actions: [
-            IconButton(
+          IconButton(
+              icon: Icon(Icons.report),
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Alarm(),
-                  ),
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('신고 및 문의사항'),
+                      content: Text(
+                          '신고 및 문의사항이 있으실 경우 alswp26@gmail.com로 연락 주시면  빠르게 해결하도록 하겠습니다'),
+                      actions: [
+                        FlatButton(
+                          onPressed: () async {
+                            Navigator.pop(context);
+                          },
+                          child: Text('확인'),
+                        ),
+                      ],
+                    );
+                  },
                 );
-              },
-              icon: Image.asset(
-                "assets/images/bell.png",
-                color: Colors.white,
-              ),
-            ),
-            IconButton(
-                icon: Icon(Icons.report),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: Text('신고 및 문의사항'),
-                        content: Text('신고 및 문의사항이 있으실 경우 alswp26@gmail.com로 연락 주시면  빠르게 해결하도록 하겠습니다'),
-                        actions: [
-                          FlatButton(
-                            onPressed: () async {
-
-                              Navigator.pop(context);
-                            },
-                            child: Text('확인'),
-                          ),
-
-                        ],
-                      );
-                    },
-                  );
-                }),
-          ],
-        ),
-        body: Stack(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Container(
-                    width: MediaQuery.of(context).size.width,
-                    height: 100,
-                    color: Color.fromRGBO(122, 154, 130, 1)),
+              }),
+        ],
+      ),
+      body: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                  width: MediaQuery.of(context).size.width,
+                  height: 100,
+                  color: Color.fromRGBO(122, 154, 130, 1)),
+            ],
+          ),
+          Container(
+            child: ListView(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: menu(),
+                ),
+      PostAll(
+          forList, context, '해외주식', Info(category: 'f'))
               ],
             ),
-            Container(
-              child: ListView(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: menu(),
-                  ),
-                  FutureBuilder(
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        return PostAll(forList, context, '해외주식', Info(category:'f'));
-                      } else {
-                        return Center(
-                          child: CircularProgressIndicator(
-                            color: Colors.red,
-                          ),
-                        );
-                      }
-                    },
-                    future: getPostAll(),
-                  ),
-
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-
+          ),
+        ],
+      ),
+    );
   }
 
   Widget Title() {
@@ -866,7 +848,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
 
   void _createInterstitialAd() {
     InterstitialAd.load(
@@ -995,6 +976,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+
   Widget PostAll(
       List posts, BuildContext context, String title, Widget postlist) {
     return Container(
@@ -1006,16 +988,31 @@ class _HomePageState extends State<HomePage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '새로 올라온 글',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold, fontFamily: 'NanumGothic'),
+                Row(
+                  children: [
+                    Text(
+                      '새로 올라온 글',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'NanumGothic'),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.replay),
+                      color: Colors.green,
+                      onPressed: () {
+                        setState(() {
+
+                        });
+                      },
+                    )
+                  ],
                 ),
                 TextButton(
                     child: Row(
                       children: [
                         Text(
-                          '더보기', style: TextStyle(color:Colors.grey),
+                          '더보기',
+                          style: TextStyle(color: Colors.grey),
                         ),
                         Icon(
                           Icons.arrow_right,
@@ -1031,51 +1028,65 @@ class _HomePageState extends State<HomePage> {
             ),
             padding: EdgeInsets.only(left: 10),
           ),
-          Container(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Center(
-                child: Container(
-
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.lightGreenAccent,width: 2)
-                  ),
-                  child: Column(
-                    children: [
-                      for (var i = 0; i < 6; i++)
-                        if (blockid.contains(posts[i]['writer']) == false)
-                        Container(
-                          decoration: BoxDecoration(
-                            border:Border(
-                              bottom: BorderSide(width: 1.0, color: Colors.grey),
-                            ),
-                          ),
-                          child: ListTile(
-                            title: Text(posts[i]['title'],
-                                style: TextStyle(fontSize: 13)),
-                            subtitle: Text(
-                              posts[i]['writer'],
-                              style: TextStyle(fontSize: 10),
-                            ),
-                            onTap: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => allDetail(
-                                            index: posts[i]['id'],
-                                          )));
-                            },
-                            dense: true,
-                          ),
+          FutureBuilder(
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return  Container(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Center(
+                      child: Container(
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border:
+                            Border.all(color: Colors.lightGreenAccent, width: 2)),
+                        child: Column(
+                          children: [
+                            for (var i = 0; i < 6; i++)
+                              if (blockid.contains(posts[i]['writer']) == false)
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      bottom:
+                                      BorderSide(width: 1.0, color: Colors.grey),
+                                    ),
+                                  ),
+                                  child: ListTile(
+                                    title: Text(posts[i]['title'],
+                                        style: TextStyle(fontSize: 13)),
+                                    subtitle: Text(
+                                      posts[i]['writer'],
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                    onTap: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) => allDetail(
+                                                index: posts[i]['id'],
+                                              )));
+                                    },
+                                    dense: true,
+                                  ),
+                                ),
+                          ],
                         ),
-
-                    ],
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ),
+                );
+
+              } else {
+                return Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.red,
+                  ),
+                );
+              }
+            },
+            future: getPostAll()
           ),
+
           SizedBox(),
         ],
       ),
