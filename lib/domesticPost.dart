@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'HomePage.dart';
 import 'addPost.dart';
 import 'domesticsearchpage.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import 'allDetail.dart';
 import 'package:dio/dio.dart';
@@ -43,6 +43,7 @@ class _InfoState extends State<Info> with AutomaticKeepAliveClientMixin<Info> {
     _getMoreData(page);
 
     super.initState();
+
     domesticlog();
 
     _sc.addListener(() {
@@ -330,6 +331,26 @@ class _InfoState extends State<Info> with AutomaticKeepAliveClientMixin<Info> {
       ),
       body: Column(
         children: [
+          InkWell(
+            child: Center(
+              child: Container(
+                color: Colors.yellow.shade100,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle_rounded),
+                    Text('커뮤니티 이용약관 확인', style:TextStyle(fontFamily: 'Strong')),
+                  ],
+                ),
+
+                height: 30,
+              ),
+            ),
+            onTap:() {
+              launch('http://13.125.62.90/agreement');
+            }
+          ),
           _buildList(),
         ],
       ),

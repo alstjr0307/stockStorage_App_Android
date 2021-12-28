@@ -7,7 +7,7 @@ import 'package:flutter_dropdown_alert/dropdown_alert.dart';
 import 'package:flutter_dropdown_alert/model/data_alert.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -58,6 +58,7 @@ class _HomePageState extends State<HomePage> {
 
     if (sharedPreferences.getStringList("blockid") == null) {
       sharedPreferences.setStringList("blockid", [""]);
+      setState(() {});
     }
     blockid = sharedPreferences.getStringList('blockid');
     if (sharedPreferences.getString("token") != null) {
@@ -140,6 +141,8 @@ class _HomePageState extends State<HomePage> {
       name: '추천주 광고',
     );
   } //앱
+
+  bool _available = false;
 
   Widget CustomDrawer() {
     return Drawer(
@@ -236,7 +239,7 @@ class _HomePageState extends State<HomePage> {
                             child: Align(
                               alignment: Alignment.bottomCenter,
                               child: Text(
-                                "로그인",
+                                "카카오 로그인",
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -245,11 +248,62 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                           ),
-                          onPressed: () {
-                            if (_isKakaoTalkInstalled)
-                              _loginWithTalk();
-                            else
-                              _loginWithKakao();
+                          onPressed: () async {
+                            await showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return StatefulBuilder(
+                                    builder: (context, setState) {
+                                  return AlertDialog(
+                                    title: Text(
+                                      '이용약관 동의',
+                                      style: TextStyle(color: Colors.black),
+                                    ),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          '이용약관에 동의하셔야 로그인 및 회원가입이 가능합니다',
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                        TextButton(
+                                            style: ButtonStyle(
+                                              backgroundColor:
+                                                  MaterialStateProperty.all(
+                                                      Colors.green.shade50),
+                                            ),
+                                            child: Text('이용약관 보러가기'),
+                                            onPressed: () {
+                                              launch(
+                                                'http://13.125.62.90/agreement',
+                                              );
+                                              _available = true;
+                                              setState(() {});
+                                            }),
+                                      ],
+                                    ),
+                                    actions: [
+                                      FlatButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: Text('동의 안함')),
+                                      FlatButton(
+                                        onPressed: _available
+                                            ? () async {
+                                                if (_isKakaoTalkInstalled)
+                                                  _loginWithTalk();
+                                                else
+                                                  _loginWithKakao();
+                                              }
+                                            : null,
+                                        child: Text('동의', style: TextStyle()),
+                                      ),
+                                    ],
+                                  );
+                                });
+                              },
+                            );
                           },
                         ),
                       if (username != null)
@@ -449,6 +503,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+
     String kakaoAppKey = "fb748431210dc9c7f46b48631a08d670";
     _initKakaoTalkInstalled();
     KakaoContext.clientId = kakaoAppKey;
@@ -827,8 +882,7 @@ class _HomePageState extends State<HomePage> {
                   padding: const EdgeInsets.all(10.0),
                   child: menu(),
                 ),
-      PostAll(
-          forList, context, '해외주식', Info(category: 'f'))
+                PostAll(forList, context, '해외주식', Info(category: 'f'))
               ],
             ),
           ),
@@ -976,7 +1030,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-
   Widget PostAll(
       List posts, BuildContext context, String title, Widget postlist) {
     return Container(
@@ -1000,9 +1053,7 @@ class _HomePageState extends State<HomePage> {
                       icon: Icon(Icons.replay),
                       color: Colors.green,
                       onPressed: () {
-                        setState(() {
-
-                        });
+                        setState(() {});
                       },
                     )
                   ],
@@ -1029,64 +1080,68 @@ class _HomePageState extends State<HomePage> {
             padding: EdgeInsets.only(left: 10),
           ),
           FutureBuilder(
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return  Container(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Center(
-                      child: Container(
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            border:
-                            Border.all(color: Colors.lightGreenAccent, width: 2)),
-                        child: Column(
-                          children: [
-                            for (var i = 0; i < 6; i++)
-                              if (blockid.contains(posts[i]['writer']) == false)
-                                Container(
-                                  decoration: BoxDecoration(
-                                    border: Border(
-                                      bottom:
-                                      BorderSide(width: 1.0, color: Colors.grey),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.red,
+                    ),
+                  );
+                } else if (snapshot.hasData) {
+                  return Container(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Center(
+                        child: Container(
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                  color: Colors.lightGreenAccent, width: 2)),
+                          child: Column(
+                            children: [
+                              for (var i = 0; i < 6; i++)
+                                if (blockid.contains(posts[i]['writer']) ==
+                                    false)
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                            width: 1.0, color: Colors.grey),
+                                      ),
+                                    ),
+                                    child: ListTile(
+                                      title: Text(posts[i]['title'],
+                                          style: TextStyle(fontSize: 13)),
+                                      subtitle: Text(
+                                        posts[i]['writer'],
+                                        style: TextStyle(fontSize: 10),
+                                      ),
+                                      onTap: () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) => allDetail(
+                                                      index: posts[i]['id'],
+                                                    )));
+                                      },
+                                      dense: true,
                                     ),
                                   ),
-                                  child: ListTile(
-                                    title: Text(posts[i]['title'],
-                                        style: TextStyle(fontSize: 13)),
-                                    subtitle: Text(
-                                      posts[i]['writer'],
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                    onTap: () {
-                                      Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) => allDetail(
-                                                index: posts[i]['id'],
-                                              )));
-                                    },
-                                    dense: true,
-                                  ),
-                                ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-
-              } else {
-                return Center(
-                  child: CircularProgressIndicator(
-                    color: Colors.red,
-                  ),
-                );
-              }
-            },
-            future: getPostAll()
-          ),
-
+                  );
+                } else {
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.red,
+                    ),
+                  );
+                }
+              },
+              future: getPostAll()),
           SizedBox(),
         ],
       ),

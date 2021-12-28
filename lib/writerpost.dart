@@ -263,7 +263,7 @@ class _WriterPostState extends State<WriterPost>
       body: Column(
         children: [
 
-          Expanded(child: _buildList()),
+          _buildList(),
         ],
       ),
     );
