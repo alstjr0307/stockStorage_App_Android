@@ -58,6 +58,7 @@ class _InputPasswordState extends State<InputPassword> {
                   child: Text('반갑습니다\n\n로그인을 위해 비밀번호를 입력해주세요', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),)
                 ),
               ),
+
               Column(
                 children: [
                   Center(
