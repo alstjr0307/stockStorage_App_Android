@@ -7,7 +7,7 @@ import 'package:flutter_dropdown_alert/dropdown_alert.dart';
 import 'package:flutter_dropdown_alert/model/data_alert.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -59,11 +59,15 @@ class _HomePageState extends State<HomePage> {
   var sharedPreferences;
   var userid;
   var blockid;
+  bool _available = false;
   checkLoginStatus() async {
     sharedPreferences = await SharedPreferences.getInstance();
 
     if (sharedPreferences.getStringList("blockid") == null) {
       sharedPreferences.setStringList("blockid", [""]);
+      setState(() {
+
+      });
     }
     blockid = sharedPreferences.getStringList('blockid');
     if (sharedPreferences.getString("token") != null) {
@@ -250,12 +254,65 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                           ),
-                          onPressed: () {
-                            if (_isKakaoTalkInstalled)
-                              _loginWithTalk();
-                            else
-                              _loginWithKakao();
-                          },
+                            onPressed: () async {
+                              await showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return StatefulBuilder(
+                                      builder: (context, setState) {
+                                        return AlertDialog(
+                                          title: Text(
+                                            '이용약관 동의',
+                                            style: TextStyle(
+                                                color: Colors.black),
+                                          ),
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                '이용약관에 동의하셔야 로그인 및 회원가입이 가능합니다',
+                                                style: TextStyle(fontSize: 12),
+                                              ),
+                                              TextButton(
+                                                  style: ButtonStyle(
+                                                    backgroundColor:
+                                                    MaterialStateProperty.all(
+                                                        Colors.green.shade50),
+                                                  ),
+                                                  child: Text('이용약관 보러가기'),
+                                                  onPressed: () {
+                                                    launch(
+                                                      'http://13.209.87.55/agreement',
+                                                    );
+                                                    _available = true;
+                                                    setState(() {});
+                                                  }),
+                                            ],
+                                          ),
+                                          actions: [
+                                            FlatButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: Text('동의 안함')),
+                                            FlatButton(
+                                              onPressed: _available
+                                                  ? () async {
+                                                if (_isKakaoTalkInstalled)
+                                                  _loginWithTalk();
+                                                else
+                                                  _loginWithKakao();
+                                              }
+                                                  : null,
+                                              child: Text(
+                                                  '동의', style: TextStyle()),
+                                            ),
+                                          ],
+                                        );
+                                      });
+                                },
+                              );
+                            },
                         ),
                       if (username != null)
                         Column(
@@ -359,6 +416,7 @@ class _HomePageState extends State<HomePage> {
                                   },
                                 );
                                 sharedPreferences.clear();
+                                sharedPreferences.setStringList("blockid", [""]);
                                 sharedPreferences.commit();
                                 username = null;
 
