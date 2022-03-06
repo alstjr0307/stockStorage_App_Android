@@ -147,7 +147,7 @@ class _SetIDState extends State<SetID> {
       "first_name": nameController.text,
     };
     var responsee =
-        await http.post(Uri.http("13.125.62.90", "api/v2/auth/users/"), body: body);
+        await http.post(Uri.http("13.209.87.55", "api/v2/auth/users/"), body: body);
     var jsonRegist = json.decode((utf8.decode(responsee.bodyBytes)));
     if (responsee.statusCode == 201) {
       //계정 생성 성공
@@ -156,7 +156,7 @@ class _SetIDState extends State<SetID> {
       var userr = jsonRegist['id'];
 
       var responselogin = await http
-          .post(Uri.http("13.125.62.90", "api/v2/auth/token/login/"), body: {
+          .post(Uri.http("13.209.87.55", "api/v2/auth/token/login/"), body: {
         "username": widget.userID,
         "password": passwordController.text
       });

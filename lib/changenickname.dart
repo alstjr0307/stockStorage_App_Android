@@ -27,7 +27,7 @@ class _State extends State<ChangeNickname> {
     print('123');
     print('아이디'+ userid.toString());
     var response = await http.patch(
-        Uri.http("13.125.62.90", "api/v1/AuthUser/$userid/"),
+        Uri.http("13.209.87.55", "api/v1/AuthUser/$userid/"),
         headers: {"Authorization": "Token ${token}"},
         body: data);
 

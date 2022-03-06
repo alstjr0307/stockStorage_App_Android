@@ -135,7 +135,7 @@ class _DomesticSearchPageState extends State<DomesticSearchPage> {
         isLoading = true;
       });
 
-      var url = "http://13.125.62.90/api/v1/BlogPosts/?category=${widget.category}&contentsearch=${searchController.text}&page=" +
+      var url = "http://13.209.87.55/api/v1/BlogPosts/?category=${widget.category}&contentsearch=${searchController.text}&page=" +
           (index + 1).toString();
 
       final response = await dio.get(url);
@@ -165,7 +165,7 @@ class _DomesticSearchPageState extends State<DomesticSearchPage> {
         isLoading = true;
       });
 
-      var url = "http://13.125.62.90/api/v1/BlogPosts/?category=${widget.category}&titlesearch=${searchController.text}&page=" +
+      var url = "http://13.209.87.55/api/v1/BlogPosts/?category=${widget.category}&titlesearch=${searchController.text}&page=" +
           (index + 1).toString();
 
       final response = await dio.get(url);
@@ -196,7 +196,7 @@ class _DomesticSearchPageState extends State<DomesticSearchPage> {
         isLoading = true;
       });
 
-      var url = "http://13.125.62.90/api/v1/BlogPostsList/?category=${widget.category}&multisearch=${searchController.text}&page=" +
+      var url = "http://13.209.87.55/api/v1/BlogPostsList/?category=${widget.category}&multisearch=${searchController.text}&page=" +
           (index + 1).toString();
       print(url);
       final response = await dio.get(url);

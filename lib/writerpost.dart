@@ -73,7 +73,7 @@ class _WriterPostState extends State<WriterPost>
         isLoading = true;
       });
       print('아이디'+ widget.userID.toString());
-      var url = "http://13.125.62.90/api/v1/BlogPostsList/?owner=${widget.userID}&page=" +
+      var url = "http://13.209.87.55/api/v1/BlogPostsList/?owner=${widget.userID}&page=" +
           (index + 1).toString();
       print(url);
       final response = await dio.get(url);

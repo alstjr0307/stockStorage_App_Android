@@ -40,11 +40,18 @@ FirebaseAuth auth = FirebaseAuth.instance;
 FirebaseAnalytics analytics = FirebaseAnalytics();
 
 class _HomePageState extends State<HomePage> {
+  static final AdRequest request = AdRequest(
+    keywords: <String>['stock','주식','finance','추천주','은행'],
+    contentUrl: 'http://foo.com/bar.html',
+    nonPersonalizedAds: true,
+  );
   late FirebaseMessaging messaging;
   InterstitialAd? _recommendAd;
   int _numrecommendLoadAttempts = 0;
   InterstitialAd? _interstitialAd;
   int _numInterstitialLoadAttempts = 0;
+  RewardedAd? _rewardedAd;
+  int _numRewardedLoadAttempts = 0;
   int flag = 0;
   final dio = new Dio();
   var token;
@@ -453,7 +460,7 @@ class _HomePageState extends State<HomePage> {
     checkLoginStatus();
     logAppOpen();
     _signInAnonymously();
-    _initRewardedVideoAdListener();
+    _createRewardedAd();
     messaging = FirebaseMessaging.instance;
     messaging.getToken().then((value) async {
       sharedPreferences = await SharedPreferences.getInstance();
@@ -615,13 +622,37 @@ class _HomePageState extends State<HomePage> {
               RawMaterialButton(
                 onPressed: () {
                   if (flag == 1) {
-                    _showRewardedAd();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Tofu(),
-                      ),
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text('광고 시청'),
+                          content: Text('광고를 시청하시겠습니까?'),
+                          actions: [
+                            FlatButton(
+                              onPressed: () async {
+
+                                Navigator.pop(context);
+                                _showRewardedAd();
+                              },
+                              child: Text('네'),
+                            ),
+                            FlatButton(
+                              onPressed: () async {
+
+                                Navigator.pop(context);
+
+                              },
+                              child: Text('아니오'),
+                            ),
+
+
+                          ],
+                        );
+                      },
                     );
+
+
                   }
                   else {
                     AlertController.show(
@@ -906,8 +937,72 @@ class _HomePageState extends State<HomePage> {
     _interstitialAd!.show();
     _interstitialAd = null;
   }
+  void _createRewardedAd() {
+    RewardedAd.load(
+        adUnitId: 'ca-app-pub-6925657557995580/4492775903',
+        request: request,
+        rewardedAdLoadCallback: RewardedAdLoadCallback(
+          onAdLoaded: (RewardedAd ad) {
+
+            _rewardedAd = ad;
+            _numRewardedLoadAttempts = 0;
+            flag = 1;
+            setState(() {});
+          },
+          onAdFailedToLoad: (LoadAdError error) {
+            print('RewardedAd failed to load: $error');
+            _rewardedAd = null;
+            _numRewardedLoadAttempts += 1;
+            flag = 1;
+            setState(() {});
+            if (_numRewardedLoadAttempts < maxFailedLoadAttempts) {
+              _createRewardedAd();
+            }
+          },
+        ));
+  }
 
   void _showRewardedAd() {
+    if (_rewardedAd == null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Tofu(),
+        ),
+      );
+      return;
+    }
+    _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdShowedFullScreenContent: (RewardedAd ad) {
+        _createRewardedAd();
+
+      },
+      onAdDismissedFullScreenContent: (RewardedAd ad) {
+        ad.dispose();
+        _createRewardedAd();
+      },
+      onAdFailedToShowFullScreenContent: (RewardedAd ad, AdError error) {
+
+        ad.dispose();
+        _createRewardedAd();
+      },
+    );
+
+    _rewardedAd!.setImmersiveMode(true);
+    _rewardedAd!.show(
+        onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Tofu(),
+            ),
+          );
+          print('$ad with reward $RewardItem(${reward.amount}, ${reward.type})');
+          _createRewardedAd();
+        });
+
+  }
+  /*void _showRewardedAd() {
     if (_recommendAd == null) {
       return;
     }
@@ -950,16 +1045,16 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
+*/
   var popularTag = [];
   var forList = [];
 
   Future<List> getPostAll() async {
     popularTag = [];
 
-    var urlFor = "http://13.125.62.90/api/v1/BlogPostsList/?category=F";
+    var urlFor = "http://13.209.87.55/api/v1/BlogPostsList/?category=F";
 
-    var tag = "http://13.125.62.90/api/v1/TaggitTaggedItem/";
+    var tag = "http://13.209.87.55/api/v1/TaggitTaggedItem/";
 
     final responsetag = await dio.get(tag,
         options: Options(
@@ -1084,7 +1179,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<Map> getProfile() async {
     var profileurl =
-        'http://13.125.62.90/api/v1/AuthUser/${userid.toString()}/';
+        'http://13.209.87.55/api/v1/AuthUser/${userid.toString()}/';
 
     final responseall = await dio.get(profileurl,
         options: Options(headers: {"Authorization": "Token $token"}));

@@ -66,7 +66,7 @@ class _StoragePostState extends State<StoragePost> {
         isLoading = true;
       });
       var tagitemurl =
-          "http://13.125.62.90/api/v1/TaggitTaggedItem/?namee=${widget.tag}";
+          "http://13.209.87.55/api/v1/TaggitTaggedItem/?namee=${widget.tag}";
 
       final taggitemresponse = await dio.get(
         tagitemurl,
@@ -82,7 +82,7 @@ class _StoragePostState extends State<StoragePost> {
 
       if (idlist != '') {
         var url =
-            "http://13.125.62.90/api/v1/BlogPostsList/?id_in=${idlist}&page=" +
+            "http://13.209.87.55/api/v1/BlogPostsList/?id_in=${idlist}&page=" +
                 (index + 1).toString();
 
         final response = await dio.get(url);

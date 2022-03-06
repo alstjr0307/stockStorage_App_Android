@@ -17,7 +17,7 @@ class MyProfile extends StatelessWidget {
     var userid = sharedPreferences.getInt("userID");
 
     var profileurl =
-        'http://13.125.62.90/api/v1/AuthUser/${userid.toString()}/';
+        'http://13.209.87.55/api/v1/AuthUser/${userid.toString()}/';
 
     final responseall = await dio.get(profileurl,
         options: Options(headers: {"Authorization": "Token ${token}"}));

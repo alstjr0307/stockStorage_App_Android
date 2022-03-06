@@ -311,7 +311,7 @@ class _AddPostState extends State<AddPost> {
     var pushtoken = sharedPreferences.getString('pushtoken');
     print(pushtoken.toString() + '푸시');
     final responseerw = await http.post(
-        Uri.http('13.125.62.90', "api/v1/BlogPosts/"),
+        Uri.http('13.209.87.55', "api/v1/BlogPosts/"),
         headers: {
           "Authorization": "Token ${token}",
           "Content-Type": "application/json"
@@ -335,7 +335,7 @@ class _AddPostState extends State<AddPost> {
 
       for (var i = 0; i < selectedItems.length; i++) {
         final tagpost =
-            await http.post(Uri.http('13.125.62.90', 'api/v1/TaggitTag/'),
+            await http.post(Uri.http('13.209.87.55', 'api/v1/TaggitTag/'),
                 headers: {
                   "Authorization": "Token ${token}",
                   "Content-Type": "application/json",
@@ -348,7 +348,7 @@ class _AddPostState extends State<AddPost> {
           var tagid = jsonDecode(tagpost.body)["id"];
           print('태그 새로추가 태그아이디는 ${tagid}');
           final taggit = await http.post(
-            Uri.http('13.125.62.90', 'api/v1/TaggitTaggedItem/'),
+            Uri.http('13.209.87.55', 'api/v1/TaggitTaggedItem/'),
             headers: {
               "Authorization": "Token ${token}",
               "Content-Type": "application/json"
@@ -361,7 +361,7 @@ class _AddPostState extends State<AddPost> {
           );
         } else if (tagpost.statusCode == 400) {
           var tagg = await http.get(
-            Uri.http('13.125.62.90', 'api/v1/TaggitTag/',
+            Uri.http('13.209.87.55', 'api/v1/TaggitTag/',
                 {"name": selectedItems[i]}),
             headers: {
               "Authorization": "Token ${token}",
@@ -370,7 +370,7 @@ class _AddPostState extends State<AddPost> {
           );
           var tagid = jsonDecode(tagg.body)[0]['id'];
           final taggit = await http.post(
-            Uri.http('13.125.62.90', 'api/v1/TaggitTaggedItem/'),
+            Uri.http('13.209.87.55', 'api/v1/TaggitTaggedItem/'),
             headers: {
               "Authorization": "Token ${token}",
               "Content-Type": "application/json"

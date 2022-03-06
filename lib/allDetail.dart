@@ -68,7 +68,7 @@ class _allDetailState extends State<allDetail>
 
   Future<void> doLikes() async {
     final likeresponse = await http.post(
-        Uri.http('13.125.62.90', "api/v1/BlogPostsLikes/"),
+        Uri.http('13.209.87.55', "api/v1/BlogPostsLikes/"),
         headers: {
           "Authorization": "Token ${token}",
           "Content-Type": "application/json"
@@ -99,7 +99,7 @@ class _allDetailState extends State<allDetail>
                     }
                   );
                   final likeresponsee = await http.get(
-                    Uri.http('13.125.62.90', "api/v1/BlogPostsLikes/", {
+                    Uri.http('13.209.87.55', "api/v1/BlogPostsLikes/", {
                       "user": "${sharedPreferences.getInt("userID")}",
                       "post": "${widget.index}"
                     }),
@@ -112,7 +112,7 @@ class _allDetailState extends State<allDetail>
                   var a = jsonDecode(likeresponsee.body);
 
                   final likeresponseee = await http.delete(
-                    Uri.http('13.125.62.90', "api/v1/BlogPostsLikes/${a[0]['id']}/"),
+                    Uri.http('13.209.87.55', "api/v1/BlogPostsLikes/${a[0]['id']}/"),
                     headers: {
                       "Authorization": "Token ${token}",
                       "Content-Type": "application/json"
@@ -275,7 +275,7 @@ class _allDetailState extends State<allDetail>
                                       Navigator.of(context).pop();
 
                                       await http.delete(
-                                        Uri.http('13.125.62.90',
+                                        Uri.http('13.209.87.55',
                                             'api/v1/BlogPosts/${widget.index}/'),
                                         headers: {
                                           "Authorization": "Token $token",
@@ -620,7 +620,7 @@ class _allDetailState extends State<allDetail>
                                                                       await http
                                                                           .delete(
                                                                     Uri.http(
-                                                                        '13.125.62.90',
+                                                                        '13.209.87.55',
                                                                         'api/v1/BlogPostcomment/${i['id']}/'),
                                                                     headers: {
                                                                       "Authorization":
@@ -731,7 +731,7 @@ class _allDetailState extends State<allDetail>
 
   Future<Map> getPostData(int postId, Map content) async {
     final response = await http.get(
-      Uri.http('13.125.62.90', "api/v1/BlogPosts/${postId}/"),
+      Uri.http('13.209.87.55', "api/v1/BlogPosts/${postId}/"),
     ); //게시물 가져오기
 
     if (response.statusCode == 200) {
@@ -773,7 +773,7 @@ class _allDetailState extends State<allDetail>
     var formatter = new DateFormat('yyyy-MM-dd H:m');
     var now = new DateTime.now();
     final likeresponse = await http.post(
-        Uri.http('13.125.62.90', "api/v1/BlogPostcomment/"),
+        Uri.http('13.209.87.55', "api/v1/BlogPostcomment/"),
         headers: {
           "Authorization": "Token ${token}",
           "Content-Type": "application/json"
@@ -789,7 +789,7 @@ class _allDetailState extends State<allDetail>
     _future = getPostData(widget.index, content);
 
     if (postowner != userid)
-      await http.get(Uri.http('13.125.62.90', 'push/$pushtoken/$comment'));
+      await http.get(Uri.http('13.209.87.55', 'push/$pushtoken/$comment'));
     setState(() {});
 
     Timer(Duration(milliseconds: 500), () {

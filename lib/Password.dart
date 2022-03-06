@@ -98,13 +98,13 @@ class _InputPasswordState extends State<InputPassword> {
     });
     Map data = {"username": widget.userID, "password": passwordController.text};
     var responsee = await http
-        .post(Uri.http("13.125.62.90", "api/v2/auth/token/login/"), body: data);
+        .post(Uri.http("13.209.87.55", "api/v2/auth/token/login/"), body: data);
     print('로그인' + responsee.body);
     if (responsee.statusCode == 200) {
       var jsonDataa = json.decode(responsee.body);
       var tokenn = jsonDataa['auth_token'];
       var userresponse = await http.get(
-          Uri.http("13.125.62.90", "api/v2/auth/users/me"),
+          Uri.http("13.209.87.55", "api/v2/auth/users/me"),
           headers: {"Authorization": "Token ${tokenn}"});
       var user = jsonDecode(utf8.decode(userresponse.bodyBytes));
       print(user);
