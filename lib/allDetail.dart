@@ -342,13 +342,62 @@ class _allDetailState extends State<allDetail>
                             context: context,
                             builder: (BuildContext context) {
                               return AlertDialog(
-                                title: Text('작성자 신고'),
-                                content: Text('해당 회원을 관리자에게 신고합니다\n작성자를 신고하시겠습니까?'),
+                                title: Text('게시물 신고'),
+                                content: Text('해당 게시물을 관리자에게 신고합니다\n게시물을 신고하시겠습니까?'),
                                 actions: [
                                   FlatButton(
                                     onPressed: () async {
 
                                       Navigator.pop(context);
+                                      await showDialog(
+                                        context: context,
+                                        builder: (context){
+                                          return AlertDialog(
+                                            title: Text('신고 완료'),
+                                            content: Text('관리자가 검토후 처리할 예정입니다\n 처리는 10시간 안에 이루어집니다')
+
+                                          );
+                                        }
+                                      );
+
+                                      setState(() {
+
+                                      });
+                                    },
+                                    child: Text('예'),
+                                  ),
+                                  FlatButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text('아니오')),
+                                ],
+                              );
+                            },
+                          );
+                        }
+                        else if (result ==5) {
+                          await showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text(restaurant['writer']+' 신고'),
+                                content: Text(restaurant['writer']+'님을 관리자에게 신고합니다\n게시물을 신고하시겠습니까?'),
+                                actions: [
+                                  FlatButton(
+                                    onPressed: () async {
+
+                                      Navigator.pop(context);
+                                      await showDialog(
+                                          context: context,
+                                          builder: (context){
+                                            return AlertDialog(
+                                                title: Text('신고 완료'),
+                                                content: Text('관리자가 검토후 처리할 예정입니다\n 처리는 10시간 안에 이루어집니다')
+
+                                            );
+                                          }
+                                      );
 
                                       setState(() {
 
@@ -390,18 +439,28 @@ class _allDetailState extends State<allDetail>
                         if(restaurant['id'] != restaurant['owner'])
                           PopupMenuItem(
                             value:3,
-                            child: Text("작성자 차단", style: TextStyle(color:Colors.red, fontWeight: FontWeight.w700)),
+                            child: Text("작성자 차단", style: TextStyle( fontWeight: FontWeight.w700)),
                           ),
                         if(restaurant['id'] != restaurant['owner'])
                         PopupMenuItem(
                           value: 4,
                           child: Text(
-                            "작성자 신고",
+                            "게시물 신고",
                             style: TextStyle(
                                 color: Colors.red,
                                 fontWeight: FontWeight.w700),
                           ),
                         ),
+                        if(restaurant['id'] != restaurant['owner'])
+                          PopupMenuItem(
+                            value: 5,
+                            child: Text(
+                              "작성자 신고",
+                              style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w700),
+                            ),
+                          ),
 
 
                       ],
@@ -700,14 +759,61 @@ class _allDetailState extends State<allDetail>
                                                       context: context,
                                                       builder: (BuildContext context) {
                                                         return AlertDialog(
-                                                          title: Text('작성자 신고'),
-                                                          content: Text('해당 회원을 관리자에게 신고합니다\n작성자를 신고하시겠습니까?'),
+                                                          title: Text('댓글 신고'),
+                                                          content: Text('해당 댓글을 관리자에게 신고합니다\n댓글을 신고하시겠습니까?'),
                                                           actions: [
                                                             FlatButton(
                                                               onPressed: () async {
 
                                                                 Navigator.pop(context);
+                                                                await showDialog(
+                                                                    context: context,
+                                                                    builder: (context){
+                                                                      return AlertDialog(
+                                                                          title: Text('신고 완료'),
+                                                                          content: Text('관리자가 검토후 처리할 예정입니다\n 처리는 10시간 안에 이루어집니다')
 
+                                                                      );
+                                                                    }
+                                                                );
+                                                                setState(() {
+
+                                                                });
+                                                              },
+                                                              child: Text('예'),
+                                                            ),
+                                                            FlatButton(
+                                                                onPressed: () {
+                                                                  Navigator.of(context).pop();
+                                                                },
+                                                                child: Text('아니오')),
+                                                          ],
+                                                        );
+                                                      },
+                                                    );
+                                                  }
+                                                  else if (result ==5) {
+                                                    await showDialog(
+                                                      context: context,
+                                                      builder: (BuildContext context) {
+                                                        return AlertDialog(
+                                                          title: Text('댓글 작성자 신고'),
+                                                          content: Text(i['user']+'님을 관리자에게 신고합니다\n댓글을 신고하시겠습니까?'),
+                                                          actions: [
+                                                            FlatButton(
+                                                              onPressed: () async {
+
+                                                                Navigator.pop(context);
+                                                                await showDialog(
+                                                                    context: context,
+                                                                    builder: (context){
+                                                                      return AlertDialog(
+                                                                          title: Text('신고 완료'),
+                                                                          content: Text('관리자가 검토후 처리할 예정입니다\n 처리는 10시간 안에 이루어집니다')
+
+                                                                      );
+                                                                    }
+                                                                );
                                                                 setState(() {
 
                                                                 });
@@ -750,19 +856,31 @@ class _allDetailState extends State<allDetail>
                                                       restaurant['id'])
                                                     PopupMenuItem(
                                                       value:3,
-                                                      child: Text("작성자 차단", style: TextStyle(color:Colors.red, fontWeight: FontWeight.w700)),
+                                                      child: Text("작성자 차단", style: TextStyle(fontWeight: FontWeight.w700)),
                                                     ),
                                                   if (i['writer'] !=
                                                       restaurant['id'])
                                                     PopupMenuItem(
                                                       value: 4,
                                                       child: Text(
-                                                        "작성자 신고",
+                                                        "댓글 신고",
                                                         style: TextStyle(
                                                             color: Colors.red,
                                                             fontWeight: FontWeight.w700),
                                                       ),
                                                     ),
+                                                  if (i['writer'] !=
+                                                      restaurant['id'])
+                                                    PopupMenuItem(
+                                                      value: 5,
+                                                      child: Text(
+                                                        i['user']+" 신고",
+                                                        style: TextStyle(
+                                                            color: Colors.red,
+                                                            fontWeight: FontWeight.w700),
+                                                      ),
+                                                    ),
+
 
 
                                                 ],

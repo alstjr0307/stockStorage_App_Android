@@ -21,9 +21,11 @@ import 'package:dio/dio.dart';
 import 'dart:async';
 import 'BlockedUser.dart';
 import 'Diary.dart';
+import 'ETF.dart';
 import 'Recommend.dart';
 import 'TOFU.dart';
 import 'TagPost.dart';
+import 'Vote.dart';
 import 'alarm.dart';
 import 'allDetail.dart';
 import 'domesticPost.dart';
@@ -835,6 +837,90 @@ class _HomePageState extends State<HomePage> {
                     ),
                     Text(
                       '종목별로\n모아보기',
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11),
+                      textAlign: TextAlign.center,
+                    )
+                  ],
+                ),
+              ),
+              RawMaterialButton(
+
+                onPressed: () {
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ETF(),
+                    ),
+                  );
+
+
+                },
+                shape: CircleBorder(),
+                child: Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(5.0),
+                      child: Container(
+                        child: Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Center(child: Text('ETF', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20),))
+                        ),
+                        height: 50.0,
+                        width: 50.0,
+                        color: Color.fromRGBO(166, 218, 149, 1),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Text(
+                      'ETF수익률',
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11),
+                      textAlign: TextAlign.center,
+                    )
+                  ],
+                ),
+              ),
+              RawMaterialButton(
+
+                onPressed: () {
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Vote(),
+                    ),
+                  );
+
+
+                },
+                shape: CircleBorder(),
+                child: Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(5.0),
+                      child: Container(
+                        child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Center(child: Text('ETF', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20),))
+                        ),
+                        height: 50.0,
+                        width: 50.0,
+                        color: Color.fromRGBO(166, 218, 149, 1),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Text(
+                      '장 투표',
                       style: TextStyle(
                           color: Colors.black,
                           fontWeight: FontWeight.bold,
