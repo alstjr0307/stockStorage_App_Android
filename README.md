@@ -1,16 +1,20 @@
 # stockdiary
 
-A new Flutter application.
+주식저장소 안드로이드 앱입니다
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
+## 제공 기능
 
-A few resources to get you started if this is your first Flutter project:
+1. 로그인, 소셜로그인 기능 구현
+2. 게시판 기능
+3. 추천주 확인 기능
+4. 콜풋 투표 기능
+5. 매매일지, 추천주 기록 기능
+6. ETF 수익률 확인 기능 (크롤링을 통한)
+7. 주식 종목 태그 기능 구현 (관련 종목 게시물만 확인 가능)
+8. 태그 기능을 통한 실시간 인기 종목 확인 기능
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+### 계획중인 기능
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. 회원간 쪽지 기능 (실시간 채팅)
+2. 종목별 현재 가격 확인 기능
